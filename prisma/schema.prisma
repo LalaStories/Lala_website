@@ -1,0 +1,115 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Story {
+  id           String   @id @default(uuid())
+  title        String
+  description  String
+  durationText String
+  ageRange     String
+  badge        String?
+  imageSrc     String
+  audioSrc     String
+  createdAt    DateTime @default(now())
+}
+
+model Testimonial {
+  id           String   @id @default(uuid())
+  text         String
+  avatarLetter String
+  authorName   String
+  authorRole   String
+  createdAt    DateTime @default(now())
+}
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  price       Float
+  imageUrl    String
+  buyUrl      String
+  category    String   // "Book" | "Toy"
+  createdAt   DateTime @default(now())
+}
+
+model PricingPlan {
+  id          String   @id @default(uuid())
+  name        String
+  price       String
+  period      String   // e.g. "month", "year", "lifetime"
+  features    String   // Comma-separated features list
+  isPopular   Boolean  @default(false)
+  badge       String?  // e.g. "Best Value"
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model ProgramApplication {
+  id          String   @id @default(uuid())
+  parentName  String
+  childName   String
+  childAge    Int
+  email       String
+  phone       String?
+  message     String
+  status      String   @default("Pending") // "Pending", "Approved", "Rejected"
+  createdAt   DateTime @default(now())
+}
+
+model BgVideo {
+  id        String   @id @default(uuid())
+  title     String
+  videoUrl  String
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Program {
+  id            String                @id @default(uuid())
+  title         String
+  description   String
+  date          String                // Display string e.g. "June 22, 2025"
+  location      String
+  imageUrl      String?               // Banner/poster image
+  qrImageUrl    String?               // QR code image for payment/registration
+  isActive      Boolean               @default(true)
+  formFields    String                // JSON array of dynamic field definitions
+  registrations ProgramRegistration[]
+  createdAt     DateTime              @default(now())
+}
+
+model ProgramRegistration {
+  id        String   @id @default(uuid())
+  programId String
+  program   Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  responses String   // JSON object: { fieldLabel: value }
+  status    String   @default("Pending")
+  createdAt DateTime @default(now())
+}

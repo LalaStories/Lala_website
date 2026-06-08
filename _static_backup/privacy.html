@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Lala Stories</title>
+  <meta name="description"
+    content="Read the Lala Stories Privacy Policy to understand how Funfeed Global Private Limited collects, stores and uses your personal data." />
+  <meta name="author" content="Funfeed Global Private Limited" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://lalastories.com/privacy.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Lala Stories" />
+  <meta property="og:url" content="https://lalastories.com/privacy.html" />
+  <meta property="og:title" content="Privacy Policy — Lala Stories" />
+  <meta property="og:description"
+    content="Read the Lala Stories Privacy Policy to understand how we collect, store and use your personal data." />
+  <meta property="og:image" content="https://lalastories.com/assets/images/hero_illustration.png" />
+  <meta property="og:locale" content="en_IN" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Privacy Policy — Lala Stories" />
+  <meta name="twitter:description" content="Read the Lala Stories Privacy Policy by Funfeed Global Private Limited." />
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Privacy Policy — Lala Stories",
+    "url": "https://lalastories.com/privacy.html",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Lala Stories",
+      "url": "https://lalastories.com"
+    }
+  }
+  </script>
+
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>" />
+  <style>
+    /* ── Privacy page hero ── */
+    .policy-hero {
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark-lighter) 60%, #3A2070 100%);
+      padding: 140px 0 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .policy-hero::before {
+      content: '🔒';
+      position: absolute;
+      font-size: 18rem;
+      opacity: 0.04;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .policy-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 122, 47, 0.15);
+      border: 1px solid rgba(255, 122, 47, 0.3);
+      color: var(--primary-light);
+      padding: 6px 18px;
+      border-radius: var(--radius-full);
+      font-family: var(--font-heading);
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 24px;
+    }
+
+    .policy-hero h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      color: var(--secondary);
+      margin-bottom: 16px;
+    }
+
+    .policy-hero h1 span {
+      color: var(--primary);
+    }
+
+    .policy-hero-meta {
+      font-family: var(--font-heading);
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 0.9rem;
+    }
+
+    .policy-hero-wave {
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      line-height: 0;
+    }
+
+    /* ── Policy body ── */
+    .policy-body {
+      background: var(--bg-warm);
+      padding: 72px 0 100px;
+    }
+
+    .policy-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Intro card */
+    .policy-intro {
+      background: var(--secondary);
+      border-radius: var(--radius-lg);
+      padding: 36px 40px;
+      margin-bottom: 56px;
+      box-shadow: var(--shadow-sm);
+      border-left: 4px solid var(--primary);
+    }
+
+    .policy-intro p {
+      font-family: var(--font-heading);
+      color: var(--text-muted);
+      line-height: 1.8;
+      font-size: 1rem;
+    }
+
+    .policy-intro strong {
+      color: var(--primary);
+    }
+
+    /* Section blocks */
+    .policy-section {
+      background: var(--secondary);
+      border-radius: var(--radius-lg);
+      padding: 40px 44px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--transition);
+    }
+
+    .policy-section:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .policy-section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--bg-warm-alt);
+    }
+
+    .policy-section-num {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--secondary);
+      box-shadow: 0 4px 12px rgba(255, 122, 47, 0.35);
+    }
+
+    .policy-section-title {
+      font-family: var(--font-heading);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    /* Clause items */
+    .policy-clause {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .policy-clause:last-child {
+      margin-bottom: 0;
+    }
+
+    .policy-clause-num {
+      font-family: var(--font-heading);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--bg-warm);
+      border-radius: var(--radius-full);
+      padding: 2px 10px;
+      height: fit-content;
+      margin-top: 3px;
+      white-space: nowrap;
+    }
+
+    .policy-clause p {
+      font-family: var(--font-heading);
+      font-size: 0.97rem;
+      color: var(--text-muted);
+      line-height: 1.85;
+    }
+
+    /* Bullet list inside clauses */
+    .policy-list {
+      margin: 10px 0 4px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .policy-list li {
+      font-family: var(--font-heading);
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .policy-list li::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      color: var(--primary);
+      font-size: 1.1rem;
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    /* Highlight box */
+    .policy-highlight {
+      background: linear-gradient(135deg, rgba(255, 122, 47, 0.07), rgba(255, 217, 102, 0.07));
+      border: 1px solid rgba(255, 122, 47, 0.15);
+      border-radius: var(--radius-md);
+      padding: 18px 22px;
+      margin-top: 14px;
+    }
+
+    .policy-highlight p {
+      font-family: var(--font-heading);
+      font-size: 0.9rem;
+      color: var(--primary-dark);
+      line-height: 1.7;
+    }
+
+    /* Bottom note */
+    .policy-footer-note {
+      text-align: center;
+      padding: 40px 24px 0;
+    }
+
+    .policy-footer-note p {
+      font-family: var(--font-heading);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .policy-footer-note a {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .policy-footer-note a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .policy-section {
+        padding: 28px 22px;
+      }
+
+      .policy-intro {
+        padding: 24px 22px;
+      }
+
+      .policy-clause {
+        flex-direction: column;
+        gap: 6px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ========== HEADER ========== -->
+  <header class="header scrolled" id="header">
+    <div class="container">
+      <a href="index.html" class="logo" id="logo">
+        <img src="assets/images/LALA logo- PNG.png" alt="LALA Stories" class="logo-img" />
+      </a>
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html#stories">Stories</a>
+        <a href="index.html#how-it-works">How It Works</a>
+        <a href="index.html#app-showcase">Our App</a>
+        <a href="index.html#testimonials">Reviews</a>
+        <a href="index.html#cta" class="nav-cta">Start Free</a>
+      </nav>
+      <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== HERO ========== -->
+  <section class="policy-hero">
+    <div class="container">
+      <div class="policy-hero-badge">🔒 Legal</div>
+      <h1>Privacy <span>Policy</span></h1>
+      <p class="policy-hero-meta">Effective Date: January 1, 2024 &nbsp;·&nbsp; Funfeed Global Private Limited</p>
+    </div>
+    <div class="policy-hero-wave">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none">
+        <path d="M0,60 C360,80 720,30 1080,60 C1260,75 1380,40 1440,60 L1440,80 L0,80 Z" fill="#FFF7F0" />
+      </svg>
+    </div>
+  </section>
+
+  <!-- ========== POLICY CONTENT ========== -->
+  <main class="policy-body">
+    <div class="policy-wrap">
+
+      <!-- Intro card -->
+      <div class="policy-intro">
+        <p>
+          <strong>LALA Stories</strong>, a venture of <strong>Funfeed Global Private Limited</strong>
+          (CIN: U72900KL2020PTC065725), is committed to protecting your privacy. This Privacy Policy
+          explains how we collect, store, use and disclose your personal data in connection with our
+          Service. By using the Service you acknowledge that you have read and understood this Policy.
+        </p>
+      </div>
+
+      <!-- ── Section 1 ── -->
+      <div class="policy-section">
+        <div class="policy-section-header">
+          <div class="policy-section-num">1</div>
+          <h2 class="policy-section-title">General</h2>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">1.1</span>
+          <p>Lala Stories, a venture of Funfeed Global Private Limited (hereinafter "Lala Stories", "us", "our" or "we"),
+            offers an internet-based digital subscription service that gives you (hereinafter "You" or the "User") access
+            to the Lala Stories website and other literary content on your mobile phone, tablet or other devices (the
+            "Service") pursuant to the Terms of Use, this Privacy Policy and any supplemental terms and conditions which
+            may govern your use of a specific Subscription plan for Lala Stories (the "Terms"). The Service is provided
+            by Funfeed Global Pvt. Ltd., with corporate identification number U72900KL2020PTC065725.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">1.2</span>
+          <p>This privacy policy explains Lala Stories' practices regarding its collection, storing, use and disclosure
+            of certain information, including your personal data in connection with our provision of the Service to You.
+            This privacy policy also applies to persons who visit our website or download and use our application. It
+            serves to inform You about our processing of your personal data and ensure You that your personal data is
+            treated with respect and in accordance with the applicable data protection legislation when using the
+            Service.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">1.3</span>
+          <p>You should always feel safe when sharing your personal data with Lala Stories. Lala Stories has taken the
+            technical and organizational security measures that are appropriate to ensure that your personal data is
+            protected from unauthorized access or disclosure, use, modification, destruction and loss. If You are not
+            comfortable with the content in this Privacy Policy You may always refrain from using the Service.</p>
+        </div>
+      </div>
+
+      <!-- ── Section 2 ── -->
+      <div class="policy-section">
+        <div class="policy-section-header">
+          <div class="policy-section-num">2</div>
+          <h2 class="policy-section-title">When and From Where Does Lala Stories Collect Personal Data?</h2>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">2.1</span>
+          <div>
+            <p>Lala Stories collects personal data about You when:</p>
+            <ul class="policy-list">
+              <li>You set up an account with Lala Stories and/or use the Service.</li>
+              <li>You install and/or use any application included in the Service with or without an underlying subscription plan.</li>
+              <li>You visit the website.</li>
+              <li>You report errors, infringing or otherwise inappropriate material or contact Lala Stories' customer services for any other reason.</li>
+              <li>You link the Service to your Facebook account or a similar third-party service (e.g. to facilitate login to the Service), in which case we receive data from such third-party service.</li>
+              <li>You answer a survey, including but not limited to customer satisfaction questionnaires or marketing surveys, or reply to communication from Lala Stories.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">2.2</span>
+          <p>Lala Stories also collects information through our own or third-party cookies and similar tracking
+            technologies (including but not limited to beacons, tags and pixels) that may track your activities and
+            choices when You download our application, use the Service or visit our website. This is for instance for
+            the purposes of facilitating log-in, remembering your preferred settings, sending You tailored marketing and
+            measuring the successfulness of advertising.</p>
+        </div>
+      </div>
+
+      <!-- ── Section 3 ── -->
+      <div class="policy-section">
+        <div class="policy-section-header">
+          <div class="policy-section-num">3</div>
+          <h2 class="policy-section-title">What Personal Data Does Lala Stories Collect?</h2>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">3.1</span>
+          <p>When You set up an account with Lala Stories or contact Lala Stories' customer services, Lala Stories
+            collects personal data about You. Basic user data includes your contact details such as name, e-mail address
+            and/or phone number. Lala Stories may also collect data regarding your date of birth, gender and additional
+            contact details such as your address. Lala Stories may also collect personal data that You provide about
+            your family members (including names, e-mails, dates of birth and/or photos). If You choose to provide such
+            personal data, You are responsible for having the right to do so with their consent and You should inform
+            them about our processing activities.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">3.2</span>
+          <p>When You use the Service or visit Lala Stories' website and app, Lala Stories may also collect data
+            concerning usage (such as choices of titles and search queries), viewing information (such as content
+            viewed) and technical data (such as unique platform IDs, phone and platform versions, device IP address,
+            Lala Stories app version, language settings, URL information, encrypted password, cookie data and browser
+            type).</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">3.3</span>
+          <p>If You choose to link the Service to Facebook or a similar third-party service, Lala Stories may collect
+            and process personal data which You have given that third party permission to share with Lala Stories. Lala
+            Stories encourages You to inform yourself of such third parties' privacy practices.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">3.4</span>
+          <p>Lala Stories may also collect and process personal data that You provide in public forums on Lala Stories'
+            website or on third-party platforms such as application stores, social networking sites, or when You link
+            your profile on a third-party site with your personal account.</p>
+        </div>
+      </div>
+
+      <!-- ── Section 4 ── -->
+      <div class="policy-section">
+        <div class="policy-section-header">
+          <div class="policy-section-num">4</div>
+          <h2 class="policy-section-title">For How Long Is the Data Kept?</h2>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">4.1</span>
+          <p>Lala Stories will keep your personal data only as long as it is necessary with regard to the purpose of the
+            respective processing activity.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">4.2</span>
+          <p>Personal data collected and processed for marketing purposes will be stored for as long as You are a
+            Subscriber and for <strong>twelve (12) months</strong> after your subscription has ended, unless You have
+            given Lala Stories your consent to continue to process such data.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">4.3</span>
+          <p>When You contact Lala Stories to receive support or for other purposes, we will store your personal data
+            for <strong>twenty-four (24) months</strong> after resolving your latest support ticket.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">4.4</span>
+          <p>Your personal data is processed for analytical purposes during your subscription period and for
+            <strong>twenty-four (24) months</strong> thereafter.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">4.5</span>
+          <p>Lala Stories may store personal data for a longer time than the aforementioned periods if required by law
+            or in order to establish, exercise or defend a right in a legal claim.</p>
+        </div>
+      </div>
+
+      <!-- ── Section 5 ── -->
+      <div class="policy-section">
+        <div class="policy-section-header">
+          <div class="policy-section-num">5</div>
+          <h2 class="policy-section-title">Where Is the Personal Data Stored?</h2>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">5.1</span>
+          <p>Your personal data is stored on servers located in the country where the Contracting Party (as defined in
+            the Terms of Use) is established. For international transfers, Lala Stories applies appropriate security
+            measures as described in Section 9.5.</p>
+        </div>
+      </div>
+
+      <!-- ── Section 6 ── -->
+      <div class="policy-section">
+        <div class="policy-section-header">
+          <div class="policy-section-num">6</div>
+          <h2 class="policy-section-title">Why Does Lala Stories Process Your Personal Data?</h2>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">6.1</span>
+          <p>Lala Stories processes your personal data for various purposes. Primarily, Lala Stories processes your
+            personal data in order to manage the customer relationship with You and to fulfill its legal obligations.
+            Your personal data may also be processed for market and customer analysis, market research, statistics,
+            business monitoring and methodological development in order to develop and customize the Service and its
+            features.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">6.2</span>
+          <p>Lala Stories also processes your personal data to provide better and more personalized offers and services,
+            and to decrease the risk of sending You irrelevant advertising or marketing. Personal data may be processed,
+            linked, segmented and analyzed in order to provide information, offers or recommendations tailored to your
+            preferences, behaviour, needs or lifestyle via email, in-app push notifications and advertising on
+            third-party channels. It may also be used as a basis for targeted marketing towards audiences similar to
+            Lala Stories' existing users, including the creation of custom audiences on platforms such as Facebook and
+            Google.</p>
+        </div>
+      </div>
+
+      <!-- ── Section 7 ── -->
+      <div class="policy-section">
+        <div class="policy-section-header">
+          <div class="policy-section-num">7</div>
+          <h2 class="policy-section-title">What Is the Legal Basis for the Processing?</h2>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">7.1</span>
+          <p>A majority of the personal data that Lala Stories processes about You is processed because it is necessary
+            for Lala Stories' performance of the Terms — i.e. in order to provide and administer the Service and its
+            features, including processing your contact details such as e-mail address, phone number and information
+            from the payment service provider.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">7.2</span>
+          <p>Some personal data is processed based on a balance of interest, i.e. Lala Stories' legitimate interest in
+            processing the data outweighs the impact and risk the processing may have on your integrity. Such is the
+            case when Lala Stories processes your personal data for support purposes or certain marketing purposes other
+            than direct marketing, and when we store your library information after your subscription has ended.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">7.3</span>
+          <p>Additionally, some personal data is processed based on your consent — for example personal data obtained
+            via your Facebook account or for direct marketing of Lala Stories' or its partners' goods and services. If
+            You provide personal data of other natural persons, such as family members, You are responsible for ensuring
+            they consent to the processing of their personal data.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">7.4</span>
+          <div>
+            <p>To the extent that processing is carried out with consent as a sole legal basis, it is voluntary for You
+              to give such consent and You may at any time, wholly or partly, withdraw your consent.</p>
+            <div class="policy-highlight">
+              <p>You have the right to withdraw your consent at any time without affecting the lawfulness of processing
+                carried out before withdrawal.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 8 ── -->
+      <div class="policy-section">
+        <div class="policy-section-header">
+          <div class="policy-section-num">8</div>
+          <h2 class="policy-section-title">Data Security and Integrity</h2>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">8.1</span>
+          <p>The security, integrity and confidentiality of your personal data is very important to us. We have
+            implemented technical, administrative and physical security measures designed to protect your personal data
+            from unauthorized access or disclosure, use, modification, destruction and loss. We review our security
+            procedures periodically to assess the need to implement additional measures or technical upgrades. Please be
+            aware that, despite our best efforts, no security measures are impenetrable, and we ask that You inform us
+            immediately of any suspicious activities You notice in the Service.</p>
+        </div>
+      </div>
+
+      <!-- ── Section 9 ── -->
+      <div class="policy-section">
+        <div class="policy-section-header">
+          <div class="policy-section-num">9</div>
+          <h2 class="policy-section-title">Who Does Lala Stories Disclose Your Personal Data To?</h2>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">9.1</span>
+          <p>Lala Stories may disclose your personal data to its affiliates, business partners, suppliers and other
+            third parties in order to fulfill the agreement with You or to fulfill agreements with Lala Stories'
+            suppliers and business partners, or otherwise according to the purposes set out in this privacy policy.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">9.2</span>
+          <p>Lala Stories may also disclose your personal data to third parties for the purpose of sending You tailored
+            advertising and marketing, measuring the success and outreach of our digital marketing and for other
+            promotional purposes — for example when using remarketing features in Google Analytics, uploading custom
+            audiences to Facebook or Google, or informing business partners that a marketing measure generated new
+            customers.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">9.3</span>
+          <p>Lala Stories may also disclose personal data to companies that process personal data on our behalf, such
+            as IT system providers, customer service companies and affiliates. Where personal data is disclosed to such
+            parties, Lala Stories enters into data processing agreements with them to ensure a high level of security
+            is maintained.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">9.4</span>
+          <p>Personal data may also be disclosed, if needed, to comply with statutory legal requirements or requirements
+            from authorities or agencies, to safeguard Lala Stories' legal interests, or to detect, prevent or address
+            fraud and other security or technical issues.</p>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">9.5</span>
+          <p>As an international business, we may store your personal data on servers across India. When your personal
+            data is transferred between different countries, such transfers are made in accordance with applicable data
+            protection laws and to the categories of recipients and for the purposes set out in this privacy policy.</p>
+        </div>
+      </div>
+
+      <!-- ── Section 10 ── -->
+      <div class="policy-section">
+        <div class="policy-section-header">
+          <div class="policy-section-num">10</div>
+          <h2 class="policy-section-title">Links to External Websites</h2>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">10.1</span>
+          <p>Information provided by Lala Stories may contain links to websites operated or owned by someone other than
+            Lala Stories. Lala Stories is not responsible for the processing of personal data carried out on these
+            websites. Lala Stories encourages You to inform yourself of the privacy practices of the respective website
+            controllers.</p>
+        </div>
+      </div>
+
+      <!-- ── Section 11 ── -->
+      <div class="policy-section">
+        <div class="policy-section-header">
+          <div class="policy-section-num">11</div>
+          <h2 class="policy-section-title">Changes to the Privacy Policy</h2>
+        </div>
+
+        <div class="policy-clause">
+          <span class="policy-clause-num">11.1</span>
+          <div>
+            <p>This privacy policy may be revised from time to time. If Lala Stories makes any significant changes,
+              Lala Stories will inform You by e-mail, SMS or through the Service before the changes take effect. The
+              most recent version of our privacy policy will also be published on Lala Stories' website. If any change
+              requires your consent, Lala Stories will make a request for such new consent from You. We encourage You
+              to review this privacy policy frequently in order to stay informed about our data processing practices.</p>
+            <div class="policy-highlight">
+              <p>Last updated: January 1, 2024. For questions about this policy, please contact us through the app or
+                website support channels.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom note -->
+      <div class="policy-footer-note">
+        <p>
+          Questions about your privacy? <a href="index.html#cta">Contact us</a> or visit our
+          <a href="index.html">Home page</a>.<br />
+          © 2026 LALA Stories — Funfeed Global Private Limited. All rights reserved.
+        </p>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer" id="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="logo">
+            <img src="assets/images/LALA logo- PNG.png" alt="LALA Stories" class="logo-img footer-logo-img" />
+          </a>
+          <p class="footer-brand-text">
+            Making bedtime magical, one story at a time. Sweet dreams start here.
+          </p>
+          <div class="footer-socials">
+            <a href="#" class="footer-social" aria-label="Facebook">📘</a>
+            <a href="#" class="footer-social" aria-label="Instagram">📸</a>
+            <a href="#" class="footer-social" aria-label="Twitter">🐦</a>
+            <a href="#" class="footer-social" aria-label="YouTube">📺</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Company</h4>
+          <div class="footer-links">
+            <a href="about.html">About Us</a>
+            <a href="#">Contact</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Support</h4>
+          <div class="footer-links">
+            <a href="help.html">Help Center</a>
+            <a href="#">Parental Guide</a>
+            <a href="privacy.html" style="color: var(--primary);">Privacy Policy</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-divider"></div>
+
+      <div class="footer-bottom">
+        <p>© 2026 LALA Stories. All rights reserved. Made with 💛 for little dreamers.</p>
+        <div class="footer-bottom-links">
+          <a href="privacy.html" style="color: var(--primary);">Privacy</a>
+          <a href="terms.html">Terms</a>
+          <a href="cancellation.html">Cancellation</a>
+          <a href="shipping.html">Shipping</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Header hamburger for mobile
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('navLinks');
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('active');
+      navLinks.classList.toggle('open');
+    });
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('active');
+        navLinks.classList.remove('open');
+      });
+    });
+  </script>
+
+</body>
+
+</html>

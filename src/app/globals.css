@@ -1,0 +1,230 @@
+@import "tailwindcss";
+
+@theme {
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+  
+  --color-primary: #FF7A2F;
+  --color-primary-light: #FFB380;
+  --color-primary-dark: #E55A10;
+  --color-secondary: var(--color-secondary-theme);
+  --color-accent: #FFD966;
+  --color-accent-light: #FFF0C2;
+  --color-bg-dark: #1A1040;
+  --color-bg-dark-lighter: #2A1D5C;
+  --color-bg-warm: var(--color-bg-warm-theme);
+  --color-bg-warm-alt: var(--color-bg-warm-alt-theme);
+  --color-text-dark: var(--color-text-dark-theme);
+  --color-text-muted: var(--color-text-muted-theme);
+  --color-text-light: #FFFFFF;
+  --color-card-bg: var(--color-card-bg-theme);
+  --color-card-border: var(--color-card-border-theme);
+  --color-border-t: var(--color-border-t-theme);
+  --color-header-scrolled-bg: var(--color-header-scrolled-bg-theme);
+  --color-header-scrolled-text: var(--color-header-scrolled-text-theme);
+}
+
+:root {
+  --color-secondary-theme: #FFFFFF;
+  --color-bg-warm-theme: #FFF7F0;
+  --color-bg-warm-alt-theme: #FFF0E0;
+  --color-text-dark-theme: #2D2D2D;
+  --color-text-muted-theme: #6B6B6B;
+  --color-card-bg-theme: #FFFFFF;
+  --color-card-border-theme: rgba(255, 122, 47, 0.08);
+  --color-border-t-theme: #F3F4F6;
+  --color-header-scrolled-bg-theme: rgba(255, 255, 255, 0.85);
+  --color-header-scrolled-text-theme: #2D2D2D;
+}
+
+.dark {
+  --color-secondary-theme: #0F0826;
+  --color-bg-warm-theme: #170E38;
+  --color-bg-warm-alt-theme: #25144D;
+  --color-text-dark-theme: #E2DDF0;
+  --color-text-muted-theme: #A098C3;
+  --color-card-bg-theme: #1A113C;
+  --color-card-border-theme: rgba(255, 122, 47, 0.15);
+  --color-border-t-theme: rgba(255, 255, 255, 0.08);
+  --color-header-scrolled-bg-theme: rgba(15, 8, 38, 0.85);
+  --color-header-scrolled-text-theme: #FFFFFF;
+}
+
+/* Global smooth transition for theme switching colors */
+.theme-transition,
+.theme-transition *,
+body, section, div, header, nav, a, button, h1, h2, h3, p, span, svg {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* ============================================================
+   BASE ELEMENT RESET & SETTINGS
+   ============================================================ */
+html {
+  scroll-behavior: smooth;
+  --font-heading: var(--font-fredoka), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: var(--font-quicksand), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text-dark);
+  background-color: var(--color-secondary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* ============================================================
+   MAGICAL CUSTOM ANIMATIONS
+   ============================================================ */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-18px); }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(3deg); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes slideInLeft {
+  0% { transform: translateX(-60px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInRight {
+  0% { transform: translateX(60px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes scaleIn {
+  0% { transform: scale(0.82); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.1) rotate(180deg); }
+}
+
+@keyframes phoneTilt {
+  0%, 100%  { transform: rotateY(-4deg) rotateX(2deg); }
+  25%      { transform: rotateY(4deg)  rotateX(3deg); }
+  50%      { transform: rotateY(4deg)  rotateX(-2deg); }
+  75%      { transform: rotateY(-4deg) rotateX(-3deg); }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: floatSlow 6.5s ease-in-out infinite;
+}
+
+.animate-sparkle {
+  animation: sparkle 1.3s ease-in-out forwards;
+}
+
+.animate-phone-tilt {
+  animation: phoneTilt 8s ease-in-out infinite;
+}
+
+.animate-slide-left {
+  animation: slideInLeft 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes blurReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.animate-blur-reveal {
+  animation: blurReveal 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-350 { animation-delay: 350ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+.animation-delay-650 { animation-delay: 650ms; }
+.animation-delay-800 { animation-delay: 800ms; }
+
+.animate-slide-right {
+  animation: slideInRight 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ============================================================
+   3D COVERFLOW PHONE CAROUSEL STYLES
+   ============================================================ */
+.app-phone-card {
+  transition: transform 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 0.6s ease,
+              filter 0.6s ease,
+              scale 0.6s ease;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+/* Active central slide */
+.app-phone-card.active {
+  transform: translate3d(0, 0, 0) rotateY(0deg) scale(1);
+  opacity: 1;
+  filter: brightness(1) drop-shadow(0 25px 50px rgba(255, 122, 47, 0.35));
+}
+
+/* Card shifted next (right) */
+.app-phone-card.card-next {
+  transform: translate3d(70px, 0, -120px) rotateY(-26deg) scale(0.82);
+  opacity: 0.65;
+  filter: brightness(0.55);
+}
+
+/* Card shifted prev (left) */
+.app-phone-card.card-prev {
+  transform: translate3d(-70px, 0, -120px) rotateY(26deg) scale(0.82);
+  opacity: 0.65;
+  filter: brightness(0.55);
+}
+
+/* Hidden cards queued */
+.app-phone-card.card-hidden {
+  transform: translate3d(0, 0, -240px) scale(0.6);
+  opacity: 0;
+}
+
+/* Mobile responsive card positions */
+@media (max-width: 640px) {
+  .app-phone-card.card-next {
+    transform: translate3d(36px, 0, -100px) rotateY(-20deg) scale(0.78);
+  }
+  .app-phone-card.card-prev {
+    transform: translate3d(-36px, 0, -100px) rotateY(20deg) scale(0.78);
+  }
+  .app-phone-card.card-hidden {
+    transform: translate3d(0, 0, -180px) scale(0.6);
+  }
+}
