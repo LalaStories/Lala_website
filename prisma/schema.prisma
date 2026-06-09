@@ -40,6 +40,9 @@ model Admin {
   id        String   @id @default(uuid())
   username  String   @unique
   password  String
+  name      String   @default("")
+  email     String   @default("")
+  role      String   @default("editor") // "superadmin" | "editor" | "viewer"
   createdAt DateTime @default(now())
 }
 

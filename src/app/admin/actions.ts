@@ -64,6 +64,101 @@ export async function logoutAction() {
   redirect("/admin/login");
 }
 
+// --- User Management Actions ---
+
+export async function listAdminsAction() {
+  await verifyAdminAuth();
+  const admins = await db.admin.findMany({
+    orderBy: { createdAt: "asc" },
+    select: { id: true, username: true, name: true, email: true, role: true, createdAt: true },
+  });
+  return admins;
+}
+
+export async function addAdminAction(data: {
+  username: string;
+  password: string;
+  name: string;
+  email: string;
+  role: string;
+}) {
+  await verifyAdminAuth();
+
+  if (!data.username || !data.password) {
+    throw new Error("Username and password are required.");
+  }
+
+  const existing = await db.admin.findUnique({ where: { username: data.username } });
+  if (existing) throw new Error("Username already exists.");
+
+  await db.admin.create({
+    data: {
+      username: data.username,
+      password: hashPassword(data.password),
+      name: data.name || "",
+      email: data.email || "",
+      role: data.role || "editor",
+    },
+  });
+
+  revalidatePath("/admin");
+}
+
+export async function editAdminAction(
+  id: string,
+  data: {
+    name: string;
+    email: string;
+    role: string;
+    password?: string;
+  }
+) {
+  await verifyAdminAuth();
+
+  if (!id) throw new Error("Missing admin ID.");
+
+  const updateData: Record<string, string> = {
+    name: data.name || "",
+    email: data.email || "",
+    role: data.role || "editor",
+  };
+
+  if (data.password && data.password.trim() !== "") {
+    updateData.password = hashPassword(data.password);
+  }
+
+  await db.admin.update({
+    where: { id },
+    data: updateData,
+  });
+
+  revalidatePath("/admin");
+}
+
+export async function deleteAdminAction(id: string) {
+  const session = await verifyAdminAuth();
+
+  if (!id) throw new Error("Missing admin ID.");
+
+  // Prevent deleting yourself
+  const target = await db.admin.findUnique({ where: { id } });
+  if (!target) throw new Error("Admin not found.");
+  if (target.username === session.username) {
+    throw new Error("You cannot delete your own account.");
+  }
+
+  // Prevent deleting the last superadmin
+  if (target.role === "superadmin") {
+    const superadminCount = await db.admin.count({ where: { role: "superadmin" } });
+    if (superadminCount <= 1) {
+      throw new Error("Cannot delete the last Super Admin.");
+    }
+  }
+
+  await db.admin.delete({ where: { id } });
+  revalidatePath("/admin");
+}
+
 // --- Setting Actions ---
 export async function updateSettingAction(key: string, value: string) {
   await verifyAdminAuth();

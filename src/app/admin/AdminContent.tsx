@@ -29,6 +29,9 @@ import {
   toggleProgramActiveAction,
   updateRegistrationStatusAction,
   deleteRegistrationAction,
+  addAdminAction,
+  editAdminAction,
+  deleteAdminAction,
 } from "./actions";
 
 interface Story {
@@ -134,6 +137,15 @@ interface Program {
   createdAt: Date;
 }
 
+interface AdminUser {
+  id: string;
+  username: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: Date;
+}
+
 interface AdminContentProps {
   initialStories: Story[];
   initialTestimonials: Testimonial[];
@@ -144,9 +156,11 @@ interface AdminContentProps {
   initialSettings: Setting[];
   initialBgVideos: BgVideo[];
   initialPrograms: Program[];
+  initialAdmins: AdminUser[];
+  currentUsername: string;
 }
 
-type Tab = "video" | "stories" | "testimonials" | "faqs" | "products" | "plans" | "applications" | "programs";
+type Tab = "video" | "stories" | "testimonials" | "faqs" | "products" | "plans" | "applications" | "programs" | "users";
 
 export default function AdminContent({
   initialStories,
@@ -158,6 +172,8 @@ export default function AdminContent({
   initialSettings,
   initialBgVideos,
   initialPrograms,
+  initialAdmins,
+  currentUsername,
 }: AdminContentProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("video");
@@ -233,6 +249,16 @@ export default function AdminContent({
   const [programFormFields, setProgramFormFields] = useState<FormField[]>([]);
   const [viewingRegistrationsFor, setViewingRegistrationsFor] = useState<string | null>(null);
 
+  // User Management states
+  const [admins, setAdmins] = useState<AdminUser[]>(initialAdmins);
+  const [editingAdminId, setEditingAdminId] = useState<string | null>(null);
+  const [adminForm, setAdminForm] = useState({
+    username: "",
+    name: "",
+    email: "",
+    password: "",
+    role: "editor",
+  });
 
   const showFeedback = (success: string | null, error: string | null) => {
     setSuccessMessage(success);
@@ -684,6 +710,51 @@ export default function AdminContent({
     });
   };
 
+  // --- User Management Handlers ---
+  const handleSaveAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    startTransition(async () => {
+      try {
+        if (editingAdminId) {
+          await editAdminAction(editingAdminId, {
+            name: adminForm.name,
+            email: adminForm.email,
+            role: adminForm.role,
+            password: adminForm.password || undefined,
+          });
+          showFeedback("User updated successfully!", null);
+          setEditingAdminId(null);
+        } else {
+          await addAdminAction(adminForm);
+          showFeedback("User added successfully!", null);
+        }
+        setAdminForm({ username: "", name: "", email: "", password: "", role: "editor" });
+        router.refresh();
+      } catch (err: any) {
+        showFeedback(null, err.message || "Failed to save user");
+      }
+    });
+  };
+
+  const handleDeleteAdmin = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    startTransition(async () => {
+      try {
+        await deleteAdminAction(id);
+        setAdmins((prev) => prev.filter((a) => a.id !== id));
+        showFeedback("User deleted successfully!", null);
+        router.refresh();
+      } catch (err: any) {
+        showFeedback(null, err.message || "Failed to delete user");
+      }
+    });
+  };
 
   // Professional SVG Icons for vertical sidebar
   const navigationItems = [
@@ -741,6 +812,13 @@ export default function AdminContent({
       label: "Programs & Events",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" /></svg>
+      ),
+    },
+    {
+      id: "users",
+      label: "Users & Permissions",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
       ),
     },
   ];
@@ -2350,6 +2428,213 @@ export default function AdminContent({
                 </>
               )}
             </div>
+
+            {/* ====== USERS & PERMISSIONS TAB ====== */}
+            {activeTab === "users" && (
+              <div className="lg:col-span-12 space-y-8">
+                {/* Users table */}
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-xl space-y-4">
+                  <h2 className="font-heading font-extrabold text-xl border-b border-white/10 pb-3">
+                    Admin Users ({admins.length})
+                  </h2>
+                  {admins.length === 0 ? (
+                    <p className="text-white/40 text-sm py-4 text-center">No admin users found.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-left text-[10px] font-extrabold uppercase tracking-widest text-white/40 border-b border-white/10">
+                            <th className="pb-3 pr-4">Name / Username</th>
+                            <th className="pb-3 pr-4">Email</th>
+                            <th className="pb-3 pr-4">Role</th>
+                            <th className="pb-3 pr-4">Added</th>
+                            <th className="pb-3 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {admins.map((admin) => (
+                            <tr key={admin.id} className="hover:bg-white/5 transition-colors group">
+                              <td className="py-3.5 pr-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF7A2F] to-[#E55A10] flex items-center justify-center text-xs font-bold text-white shrink-0">
+                                    {(admin.name || admin.username).charAt(0).toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <div className="font-semibold text-white text-sm leading-tight">
+                                      {admin.name || "—"}
+                                      {admin.username === currentUsername && (
+                                        <span className="ml-1.5 text-[9px] font-bold uppercase tracking-wider text-[#FF7A2F] bg-[#FF7A2F]/15 px-1.5 py-0.5 rounded-full">You</span>
+                                      )}
+                                    </div>
+                                    <div className="text-white/40 text-xs">@{admin.username}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3.5 pr-4 text-white/60 text-xs">{admin.email || "—"}</td>
+                              <td className="py-3.5 pr-4">
+                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                  admin.role === "superadmin"
+                                    ? "bg-[#FF7A2F]/20 text-[#FF7A2F]"
+                                    : admin.role === "editor"
+                                    ? "bg-blue-500/20 text-blue-300"
+                                    : "bg-white/10 text-white/50"
+                                }`}>
+                                  {admin.role === "superadmin" ? "Super Admin" : admin.role === "editor" ? "Editor" : "Viewer"}
+                                </span>
+                              </td>
+                              <td className="py-3.5 pr-4 text-white/40 text-xs">
+                                {new Date(admin.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                              </td>
+                              <td className="py-3.5 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    onClick={() => {
+                                      setEditingAdminId(admin.id);
+                                      setAdminForm({
+                                        username: admin.username,
+                                        name: admin.name,
+                                        email: admin.email,
+                                        password: "",
+                                        role: admin.role,
+                                      });
+                                    }}
+                                    className="p-2 rounded-lg bg-white/5 hover:bg-[#FF7A2F]/20 hover:text-[#FF7A2F] text-white/60 transition-all border-none cursor-pointer"
+                                    title="Edit user"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
+                                  </button>
+                                  {admin.username !== currentUsername && (
+                                    <button
+                                      onClick={() => handleDeleteAdmin(admin.id)}
+                                      disabled={isPending}
+                                      className="p-2 rounded-lg bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 text-white/60 transition-all border-none cursor-pointer disabled:opacity-40"
+                                      title="Delete user"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Add / Edit User Form */}
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-xl space-y-5">
+                  <h2 className="font-heading font-extrabold text-xl border-b border-white/10 pb-3">
+                    {editingAdminId ? "Edit User" : "Add New User"}
+                  </h2>
+                  <form onSubmit={handleSaveAdmin} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Username — only shown for new users */}
+                      {!editingAdminId && (
+                        <div className="space-y-1.5">
+                          <label className="block text-[10px] font-extrabold uppercase tracking-widest text-white/50">Username *</label>
+                          <input
+                            type="text"
+                            value={adminForm.username}
+                            onChange={(e) => setAdminForm({ ...adminForm, username: e.target.value })}
+                            required
+                            placeholder="e.g. editor_jane"
+                            className="w-full rounded-xl border border-white/10 bg-white/5 focus:bg-white/10 px-4 py-2.5 text-sm focus:border-[#FF7A2F] focus:outline-none transition-all text-white placeholder-white/30"
+                          />
+                        </div>
+                      )}
+                      {/* Full Name */}
+                      <div className="space-y-1.5">
+                        <label className="block text-[10px] font-extrabold uppercase tracking-widest text-white/50">Full Name</label>
+                        <input
+                          type="text"
+                          value={adminForm.name}
+                          onChange={(e) => setAdminForm({ ...adminForm, name: e.target.value })}
+                          placeholder="e.g. Jane Doe"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 focus:bg-white/10 px-4 py-2.5 text-sm focus:border-[#FF7A2F] focus:outline-none transition-all text-white placeholder-white/30"
+                        />
+                      </div>
+                      {/* Email */}
+                      <div className="space-y-1.5">
+                        <label className="block text-[10px] font-extrabold uppercase tracking-widest text-white/50">Email</label>
+                        <input
+                          type="email"
+                          value={adminForm.email}
+                          onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })}
+                          placeholder="e.g. jane@example.com"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 focus:bg-white/10 px-4 py-2.5 text-sm focus:border-[#FF7A2F] focus:outline-none transition-all text-white placeholder-white/30"
+                        />
+                      </div>
+                      {/* Password */}
+                      <div className="space-y-1.5">
+                        <label className="block text-[10px] font-extrabold uppercase tracking-widest text-white/50">
+                          Password {editingAdminId && <span className="text-white/30 normal-case font-normal">(leave blank to keep current)</span>}
+                        </label>
+                        <input
+                          type="password"
+                          value={adminForm.password}
+                          onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })}
+                          required={!editingAdminId}
+                          placeholder="••••••••"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 focus:bg-white/10 px-4 py-2.5 text-sm focus:border-[#FF7A2F] focus:outline-none transition-all text-white placeholder-white/30"
+                        />
+                      </div>
+                      {/* Role */}
+                      <div className="space-y-1.5">
+                        <label className="block text-[10px] font-extrabold uppercase tracking-widest text-white/50">Role *</label>
+                        <select
+                          value={adminForm.role}
+                          onChange={(e) => setAdminForm({ ...adminForm, role: e.target.value })}
+                          className="w-full rounded-xl border border-white/10 bg-[#1A1040] focus:bg-white/10 px-4 py-2.5 text-sm focus:border-[#FF7A2F] focus:outline-none transition-all text-white"
+                        >
+                          <option value="superadmin">Super Admin — Full access</option>
+                          <option value="editor">Editor — Can manage content</option>
+                          <option value="viewer">Viewer — Read-only access</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Role description hint */}
+                    <div className={`p-3 rounded-xl text-xs font-medium flex items-start gap-2 ${
+                      adminForm.role === "superadmin" ? "bg-[#FF7A2F]/10 text-[#FF7A2F]/80 border border-[#FF7A2F]/20"
+                      : adminForm.role === "editor" ? "bg-blue-500/10 text-blue-300/80 border border-blue-500/20"
+                      : "bg-white/5 text-white/40 border border-white/10"
+                    }`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-3.5 h-3.5 shrink-0 mt-0.5"><path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
+                      {adminForm.role === "superadmin"
+                        ? "Super Admin has full access to all sections of the admin panel including user management."
+                        : adminForm.role === "editor"
+                        ? "Editor can create, edit, and delete content (stories, FAQs, products, programs) but cannot manage users."
+                        : "Viewer has read-only access and cannot make any changes."}
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      {editingAdminId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingAdminId(null);
+                            setAdminForm({ username: "", name: "", email: "", password: "", role: "editor" });
+                          }}
+                          className="w-1/3 py-3 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white rounded-xl text-sm font-bold shadow-md transition-all cursor-pointer select-none"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                      <button
+                        type="submit"
+                        disabled={isPending}
+                        className={`${editingAdminId ? "w-2/3" : "w-full"} py-3.5 bg-[#FF7A2F] hover:bg-[#E55A10] disabled:bg-white/10 disabled:text-white/30 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer border-none select-none`}
+                      >
+                        {isPending ? "Saving..." : editingAdminId ? "Update User" : "Add User"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
       </main>

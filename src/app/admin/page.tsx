@@ -22,41 +22,36 @@ export default async function AdminPage() {
     redirect("/admin/login");
   }
 
-  // Fetch all administrative content
-  const stories = await db.story.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-  
-  const testimonials = await db.testimonial.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-  
-  const faqs = await db.fAQ.findMany({
-    orderBy: { order: "asc" },
-  });
-
-  const products = await db.product.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-
-  const plans = await db.pricingPlan.findMany({
-    orderBy: { order: "asc" },
-  });
-
-  const applications = await db.programApplication.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-
-  const settings = await db.setting.findMany();
-
-  const bgVideos = await db.bgVideo.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-
-  const programs = await db.program.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { registrations: { orderBy: { createdAt: "desc" } } },
-  });
+  // Fetch all administrative content in parallel for performance
+  const [
+    stories,
+    testimonials,
+    faqs,
+    products,
+    plans,
+    applications,
+    settings,
+    bgVideos,
+    programs,
+    admins,
+  ] = await Promise.all([
+    db.story.findMany({ orderBy: { createdAt: "desc" } }),
+    db.testimonial.findMany({ orderBy: { createdAt: "desc" } }),
+    db.fAQ.findMany({ orderBy: { order: "asc" } }),
+    db.product.findMany({ orderBy: { createdAt: "desc" } }),
+    db.pricingPlan.findMany({ orderBy: { order: "asc" } }),
+    db.programApplication.findMany({ orderBy: { createdAt: "desc" } }),
+    db.setting.findMany(),
+    db.bgVideo.findMany({ orderBy: { createdAt: "desc" } }),
+    db.program.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { registrations: { orderBy: { createdAt: "desc" } } },
+    }),
+    db.admin.findMany({
+      orderBy: { createdAt: "asc" },
+      select: { id: true, username: true, name: true, email: true, role: true, createdAt: true },
+    }),
+  ]);
 
   return (
     <AdminContent
@@ -69,7 +64,8 @@ export default async function AdminPage() {
       initialSettings={settings}
       initialBgVideos={bgVideos}
       initialPrograms={programs}
+      initialAdmins={admins}
+      currentUsername={session!.username}
     />
   );
 }
-
