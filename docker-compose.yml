@@ -10,23 +10,14 @@ services:
       - '3000:3000'
     restart: always
     environment:
-      - DATABASE_URL=file:./dev.db
+      - DATABASE_URL=postgresql://neondb_owner:npg_XlYq7czvWP1V@ep-bitter-paper-ap8blfnb.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require
       - ADMIN_JWT_SECRET=lala-secret-salt-key-2026-dynamic-token-signing
+      - NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY=0719f284-576b-40ce-9a59-57554537e65c
+      - NODE_ENV=production
     volumes:
-      - ./prisma:/app/prisma
-
-  postgres:
-    image: postgres:15-alpine
-    container_name: lala-postgres
-    restart: always
-    ports:
-      - '5432:5432'
-    environment:
-      POSTGRES_USER: lala_admin
-      POSTGRES_PASSWORD: lala_secure_password
-      POSTGRES_DB: lala_db
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      # Persist uploaded videos and images across deploys & restarts
+      - lala_assets:/app/public/assets
 
 volumes:
-  pgdata:
+  lala_assets:
+    driver: local
