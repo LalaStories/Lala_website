@@ -5,8 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { hashPassword, createSessionToken, verifySessionToken } from "@/lib/auth";
-import fs from "fs/promises";
-import path from "path";
+import { uploadToCloudinary, deleteFromCloudinary } from "@/lib/cloudinary";
 
 // --- Authorization Helper ---
 async function verifyAdminAuth() {
@@ -293,18 +292,8 @@ export async function deleteFaqAction(id: string) {
 
 // --- Product Actions Helper ---
 async function saveUploadedFile(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  // Clean filename to prevent filesystem issues
-  const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-  const dirPath = path.join(process.cwd(), "public/assets/images");
-  
-  // Ensure assets directory exists
-  await fs.mkdir(dirPath, { recursive: true });
-  
-  const filePath = path.join(dirPath, filename);
-  await fs.writeFile(filePath, buffer);
-  return `/assets/images/${filename}`;
+  // Upload to Cloudinary — persists across Railway deploys
+  return uploadToCloudinary(file, "lala/images", "image");
 }
 
 // --- Product Actions ---
@@ -533,28 +522,13 @@ export async function deleteApplicationAction(id: string) {
 
 // --- Background Video Actions Helper ---
 async function saveUploadedVideoFile(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-  const dirPath = path.join(process.cwd(), "public/assets/video");
-  
-  await fs.mkdir(dirPath, { recursive: true });
-  
-  const filePath = path.join(dirPath, filename);
-  await fs.writeFile(filePath, buffer);
-  return `/assets/video/${filename}`;
+  // Upload to Cloudinary — persists across Railway deploys
+  return uploadToCloudinary(file, "lala/videos", "video");
 }
 
 async function deleteLocalFile(fileUrl: string) {
-  if (!fileUrl) return;
-  if (fileUrl.startsWith("/assets/")) {
-    try {
-      const filePath = path.join(process.cwd(), "public", fileUrl);
-      await fs.unlink(filePath);
-    } catch (err) {
-      console.error("Failed to delete local file:", fileUrl, err);
-    }
-  }
+  // Delete from Cloudinary if it's a Cloudinary URL
+  await deleteFromCloudinary(fileUrl);
 }
 
 // --- Background Video CRUD Actions ---
@@ -680,14 +654,9 @@ export async function setActiveBgVideoAction(id: string) {
 // --- Program Actions ---
 
 async function saveUploadedImageFile(file: File, subDir: string = "images"): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-  const dirPath = path.join(process.cwd(), `public/assets/${subDir}`);
-  await fs.mkdir(dirPath, { recursive: true });
-  const filePath = path.join(dirPath, filename);
-  await fs.writeFile(filePath, buffer);
-  return `/assets/${subDir}/${filename}`;
+  // Upload to Cloudinary under lala/programs or lala/images
+  const folder = subDir === "programs" ? "lala/programs" : "lala/images";
+  return uploadToCloudinary(file, folder, "image");
 }
 
 export async function addProgramAction(formData: FormData) {
