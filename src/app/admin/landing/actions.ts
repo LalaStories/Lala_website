@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { verifySessionToken } from "@/lib/auth";
-import { uploadToCloudinary } from "@/lib/cloudinary";
+
 import { slugify, starterBlocks } from "@/types/landing";
 
 // --- Authorization helper (mirrors src/app/admin/actions.ts) ---
@@ -176,25 +176,9 @@ export async function deleteLandingPageAction(id: string) {
   revalidateLanding(page.slug);
 }
 
-// --- Media ------------------------------------------------------------
-
-/** Upload an image or video for a landing page. Returns the hosted URL. */
-export async function uploadLandingMediaAction(formData: FormData) {
-  await verifyAdminAuth();
-
-  const file = formData.get("file") as File | null;
-  const kind = (formData.get("kind") as string) || "image";
-
-  if (!file || file.size === 0) throw new Error("No file selected.");
-
-  const url = await uploadToCloudinary(
-    file,
-    kind === "video" ? "lala/landing/videos" : "lala/landing/images",
-    kind === "video" ? "video" : "image"
-  );
-
-  return { url };
-}
+// Media uploads go straight from the browser to Cloudinary — see
+// src/lib/uploadClient.ts and src/app/admin/upload-actions.ts. Routing the
+// bytes through a server action would hit the serverless body size cap.
 
 // --- Leads ------------------------------------------------------------
 

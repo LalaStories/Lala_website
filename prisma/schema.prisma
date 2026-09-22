@@ -1,6 +1,13 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Pooled connection (Neon's -pooler host) — serverless functions open
+  // many short-lived connections and would exhaust a direct connection.
+  url       = env("DATABASE_URL")
+  // Unpooled connection, used only for migrations — a transaction-mode
+  // pooler cannot run the DDL and advisory locks migrations need.
+  // Required: Prisma errors if DIRECT_URL is unset. On a non-pooled
+  // database, set it to the same value as DATABASE_URL.
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {

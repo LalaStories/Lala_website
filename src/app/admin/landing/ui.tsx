@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { uploadLandingMediaAction } from "./actions";
+import { uploadDirectToCloudinary } from "@/lib/uploadClient";
 import { Cta, CtaType, CTA_TYPE_LABELS, CTA_VALUE_PLACEHOLDER } from "@/types/landing";
 
 /* Shared form primitives for the landing page builder.
@@ -177,16 +177,22 @@ export function MediaUpload({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const handleFile = async (file: File) => {
     setBusy(true);
+    setProgress(0);
     setError(null);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("kind", kind);
-      const { url } = await uploadLandingMediaAction(fd);
+      // Straight to Cloudinary — keeps large videos off the serverless
+      // request path, which is capped well below a typical video.
+      const url = await uploadDirectToCloudinary(
+        file,
+        kind === "video" ? "lala/landing/videos" : "lala/landing/images",
+        kind === "video" ? "video" : "image",
+        setProgress
+      );
       onChange(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
@@ -212,9 +218,18 @@ export function MediaUpload({
             disabled={busy}
             className="shrink-0 cursor-pointer rounded-xl border border-[#FF7A2F]/40 bg-[#FF7A2F]/15 px-3.5 py-2.5 text-xs font-bold text-[#FFB380] transition-all hover:bg-[#FF7A2F]/25 active:scale-95 disabled:opacity-50"
           >
-            {busy ? "…" : "Upload"}
+            {busy ? `${progress}%` : "Upload"}
           </button>
         </div>
+
+        {busy && (
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-[#FF7A2F] transition-all duration-200"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
 
         <input
           ref={inputRef}
