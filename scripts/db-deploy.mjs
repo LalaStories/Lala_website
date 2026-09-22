@@ -27,6 +27,7 @@ const MIGRATION_PROBE_TABLE = {
   "20260606091524_init_admin_models": "Admin",
   "20260922000000_init_postgres": "Program",
   "20260922000100_add_landing_pages": "LandingPage",
+  "20260922000200_sync_legacy_tables": "TeamMember",
 };
 
 function prisma(...args) {

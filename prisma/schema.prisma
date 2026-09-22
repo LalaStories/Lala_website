@@ -1,5 +1,5 @@
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   // Pooled connection (Neon's -pooler host) — serverless functions open
   // many short-lived connections and would exhaust a direct connection.
   url       = env("DATABASE_URL")
@@ -59,14 +59,17 @@ model Setting {
 }
 
 model Product {
-  id          String   @id @default(uuid())
-  name        String
-  description String
-  price       Float
-  imageUrl    String
-  buyUrl      String
-  category    String // "Book" | "Toy"
-  createdAt   DateTime @default(now())
+  id            String   @id @default(uuid())
+  name          String
+  description   String
+  price         Float
+  imageUrl      String
+  // JSON array of extra image URLs. Exists in production; declared here
+  // so the schema matches the live database and no column is dropped.
+  galleryImages String   @default("[]")
+  buyUrl        String
+  category      String // "Book" | "Toy"
+  createdAt     DateTime @default(now())
 }
 
 model PricingPlan {
@@ -82,15 +85,17 @@ model PricingPlan {
 }
 
 model ProgramApplication {
-  id         String   @id @default(uuid())
-  parentName String
-  childName  String
-  childAge   Int
-  email      String
-  phone      String?
-  message    String
-  status     String   @default("Pending") // "Pending", "Approved", "Rejected"
-  createdAt  DateTime @default(now())
+  id             String   @id @default(uuid())
+  parentName     String
+  childName      String
+  childAge       Int
+  email          String
+  phone          String?
+  message        String
+  status         String   @default("Pending") // "Pending", "Approved", "Rejected"
+  // Supporting document uploaded with the application.
+  certificateUrl String?
+  createdAt      DateTime @default(now())
 }
 
 model BgVideo {
@@ -183,4 +188,33 @@ model Lead {
 
   @@index([landingPageId])
   @@index([status])
+}
+
+// ============================================================
+//  Tables that predate this schema file. They hold live data,
+//  so they are declared here to keep schema and database in
+//  sync — otherwise a future migration would drop them.
+// ============================================================
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  name      String
+  title     String
+  role      String
+  bio       String
+  favStory  String   @default("")
+  photoUrl  String   @default("")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model ColorVisionPlate {
+  id            String   @id @default(uuid())
+  imageUrl      String?
+  correctAnswer String
+  choices       String
+  hint          String   @default("")
+  isActive      Boolean  @default(true)
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
 }
