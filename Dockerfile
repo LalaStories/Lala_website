@@ -52,6 +52,7 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 
 # Prisma CLI and engines, so the container can apply migrations on boot
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
@@ -64,6 +65,7 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Apply any pending migrations, then start the server. A failed migration
-# stops the boot rather than serving against a mismatched schema.
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node server.js"]
+# Baseline if needed, apply pending migrations, then start the server.
+# A failed migration stops the boot rather than serving against a
+# mismatched schema. See scripts/db-deploy.mjs for the baseline logic.
+CMD ["sh", "-c", "node scripts/db-deploy.mjs && node server.js"]
