@@ -33,6 +33,7 @@ import {
   editAdminAction,
   deleteAdminAction,
 } from "./actions";
+import { uploadDirectToCloudinary } from "@/lib/uploadClient";
 
 interface Story {
   id: string;
@@ -177,6 +178,8 @@ export default function AdminContent({
 }: AdminContentProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("video");
+  // 0-100 while a file uploads to Cloudinary; null when idle.
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -277,13 +280,24 @@ export default function AdminContent({
 
     const formData = new FormData();
     formData.append("title", bgVideoForm.title);
-    formData.append("videoUrl", bgVideoForm.videoUrl);
-    if (bgVideoFile) {
-      formData.append("videoFile", bgVideoFile);
-    }
 
     startTransition(async () => {
       try {
+        // Videos go browser-to-Cloudinary; sending them through a server
+        // action would exceed the serverless request body limit.
+        let videoUrl = bgVideoForm.videoUrl;
+        if (bgVideoFile) {
+          setUploadProgress(0);
+          videoUrl = await uploadDirectToCloudinary(
+            bgVideoFile,
+            "lala/videos",
+            "video",
+            setUploadProgress
+          );
+          setUploadProgress(null);
+        }
+        formData.set("videoUrl", videoUrl);
+
         if (editingBgVideoId) {
           formData.append("existingVideoUrl", bgVideoForm.videoUrl);
           await editBgVideoAction(editingBgVideoId, formData);
@@ -457,13 +471,23 @@ export default function AdminContent({
     formData.append("price", productForm.price);
     formData.append("buyUrl", productForm.buyUrl);
     formData.append("category", productForm.category);
-    formData.append("imageUrl", productForm.imageUrl); // Fallback URL string
-    if (productImageFile) {
-      formData.append("imageFile", productImageFile);
-    }
 
     startTransition(async () => {
       try {
+        // Upload straight to Cloudinary, then send only the resulting URL.
+        let imageUrl = productForm.imageUrl;
+        if (productImageFile) {
+          setUploadProgress(0);
+          imageUrl = await uploadDirectToCloudinary(
+            productImageFile,
+            "lala/images",
+            "image",
+            setUploadProgress
+          );
+          setUploadProgress(null);
+        }
+        formData.set("imageUrl", imageUrl);
+
         if (editingProductId) {
           formData.append("existingImageUrl", productForm.imageUrl);
           await editProductAction(editingProductId, formData);
@@ -612,14 +636,37 @@ export default function AdminContent({
     formData.append("description", programForm.description);
     formData.append("date", programForm.date);
     formData.append("location", programForm.location);
-    formData.append("imageUrl", programForm.imageUrl);
-    formData.append("qrImageUrl", programForm.qrImageUrl);
     formData.append("formFields", JSON.stringify(programFormFields));
-    if (programBannerFile) formData.append("bannerFile", programBannerFile);
-    if (programQrFile) formData.append("qrFile", programQrFile);
 
     startTransition(async () => {
       try {
+        // Both images upload straight to Cloudinary before the action runs.
+        let bannerUrl = programForm.imageUrl;
+        if (programBannerFile) {
+          setUploadProgress(0);
+          bannerUrl = await uploadDirectToCloudinary(
+            programBannerFile,
+            "lala/programs",
+            "image",
+            setUploadProgress
+          );
+          setUploadProgress(null);
+        }
+        formData.set("imageUrl", bannerUrl);
+
+        let qrUrl = programForm.qrImageUrl;
+        if (programQrFile) {
+          setUploadProgress(0);
+          qrUrl = await uploadDirectToCloudinary(
+            programQrFile,
+            "lala/programs",
+            "image",
+            setUploadProgress
+          );
+          setUploadProgress(null);
+        }
+        formData.set("qrImageUrl", qrUrl);
+
         if (editingProgramId) {
           formData.append("existingImageUrl", programForm.imageUrl);
           formData.append("existingQrUrl", programForm.qrImageUrl);
@@ -860,6 +907,20 @@ export default function AdminContent({
               </button>
             ))}
           </nav>
+
+          {/* Landing pages live on their own route — the block builder needs the room */}
+          <div className="border-t border-white/10 pt-4">
+            <a
+              href="/admin/landing"
+              className="w-full flex items-center gap-3 px-4.5 py-3 rounded-xl text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer select-none text-left text-white/60 hover:text-[#FF7A2F] hover:bg-[#FF7A2F]/10 no-underline"
+            >
+              <span className="text-white/60">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605" /></svg>
+              </span>
+              <span>Landing Pages</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-3 h-3 ml-auto"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
+            </a>
+          </div>
         </div>
 
         {/* Sidebar Footer links */}
@@ -891,7 +952,18 @@ export default function AdminContent({
             <div className="text-[10px] font-extrabold uppercase tracking-widest text-[#FF7A2F]">
               Dashboard / {activeTab}
             </div>
-            {isPending && (
+            {uploadProgress !== null && (
+              <div className="flex items-center gap-2.5 text-xs font-semibold text-[#FF7A2F]">
+                <span className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
+                  <span
+                    className="block h-full rounded-full bg-[#FF7A2F] transition-all duration-200"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </span>
+                Uploading {uploadProgress}%
+              </div>
+            )}
+            {isPending && uploadProgress === null && (
               <div className="flex items-center gap-2 text-xs text-white/50 animate-pulse">
                 <svg className="animate-spin h-3.5 w-3.5 text-[#FF7A2F]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

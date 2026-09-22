@@ -8,3 +8,9 @@ build
 Dockerfile
 docker-compose.yml
 *.md
+
+# Never bake local secrets into the image — Next's standalone output
+# copies .env files, so they must be excluded at the build context.
+.env
+.env.*
+!.env.example

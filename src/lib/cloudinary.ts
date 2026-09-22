@@ -1,11 +1,56 @@
 import { v2 as cloudinary } from "cloudinary";
 
-// Configure once — reads from env vars set in Railway dashboard
+// Configure once — reads from env vars set in the hosting dashboard
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+export interface UploadSignature {
+  signature: string;
+  timestamp: number;
+  apiKey: string;
+  cloudName: string;
+  folder: string;
+  publicId: string;
+  resourceType: "video" | "image" | "auto";
+}
+
+/**
+ * Sign a browser-side upload so the file goes straight to Cloudinary.
+ *
+ * Serverless platforms cap request bodies (Vercel at 4.5MB), which is far
+ * below a background video. Signing here and uploading from the browser
+ * keeps the bytes off our server entirely, so size is bound only by the
+ * Cloudinary plan. The API secret never leaves the server.
+ */
+export function createUploadSignature(
+  folder: string,
+  resourceType: "video" | "image" | "auto" = "auto",
+  originalName = "file"
+): UploadSignature {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  if (!cloudName || !apiKey || !apiSecret) {
+    throw new Error(
+      "Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET."
+    );
+  }
+
+  const timestamp = Math.round(Date.now() / 1000);
+  const publicId = `${Date.now()}_${originalName.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+
+  // Only the params sent with the upload may be signed, in alphabetical order.
+  const signature = cloudinary.utils.api_sign_request(
+    { folder, public_id: publicId, timestamp },
+    apiSecret
+  );
+
+  return { signature, timestamp, apiKey, cloudName, folder, publicId, resourceType };
+}
 
 /**
  * Upload any File object to Cloudinary.
