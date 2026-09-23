@@ -4,7 +4,7 @@ import React, { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { LeadFormData } from "@/types/landing";
 import { submitLeadAction } from "@/app/admin/landing/actions";
-import { trackPixel } from "../MetaPixel";
+import { trackPixel } from "@/components/analytics/MetaPixel";
 import { LEAD_FORM_ANCHOR } from "../CtaButton";
 
 interface LeadFormBlockProps {

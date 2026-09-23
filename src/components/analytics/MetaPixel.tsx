@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Script from "next/script";
 
 declare global {
@@ -9,8 +11,9 @@ declare global {
 }
 
 /**
- * Fire a Meta standard event. Safe to call when no pixel is configured —
- * fbq simply won't exist and the call is skipped.
+ * Fire a Meta standard event on every pixel initialised on the page
+ * (site pixel plus any campaign pixel). Safe to call when no pixel is
+ * configured — fbq simply won't exist and the call is skipped.
  */
 export function trackPixel(event: string, params?: Record<string, unknown>) {
   if (typeof window === "undefined" || typeof window.fbq !== "function") return;
@@ -23,10 +26,24 @@ interface MetaPixelProps {
 }
 
 /**
- * Meta (Facebook) Pixel base code. Loads after hydration so it never
- * blocks the landing page's first paint — ad traffic is impatient.
+ * Meta Pixel base code, loaded through next/script so it never blocks first
+ * paint. Several instances can coexist (site pixel in the root layout, a
+ * campaign pixel on a landing page): the loader is idempotent and every
+ * PageView is scoped to its own pixel with `trackSingle`, so no pixel is
+ * ever counted twice.
+ *
+ * The App Router doesn't re-run scripts on client-side navigation, so
+ * PageView is fired from an effect keyed on the pathname instead of from
+ * the inline snippet.
  */
 export default function MetaPixel({ pixelId }: MetaPixelProps) {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!pixelId || typeof window.fbq !== "function") return;
+    window.fbq("trackSingle", pixelId, "PageView");
+  }, [pixelId, pathname]);
+
   if (!pixelId) return null;
 
   return (
@@ -42,7 +59,6 @@ export default function MetaPixel({ pixelId }: MetaPixelProps) {
           s.parentNode.insertBefore(t,s)}(window,document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
           fbq('init', '${pixelId}');
-          fbq('track', 'PageView');
         `}
       </Script>
       <noscript>

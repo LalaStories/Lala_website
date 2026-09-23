@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Fredoka, Quicksand } from "next/font/google";
 import { AudioProvider } from "@/store/AudioContext";
 import { ThemeProvider } from "@/store/ThemeContext";
+import MetaPixel from "@/components/analytics/MetaPixel";
+import { SITE_META_PIXEL_ID } from "@/lib/meta-pixel";
 import "./globals.css";
 
 const fredoka = Fredoka({
@@ -42,6 +44,8 @@ export default function RootLayout({
         <ThemeProvider>
           <AudioProvider>{children}</AudioProvider>
         </ThemeProvider>
+        {/* Site-wide Meta Pixel. Landing pages may add a campaign pixel on top. */}
+        <MetaPixel pixelId={SITE_META_PIXEL_ID} />
       </body>
     </html>
   );

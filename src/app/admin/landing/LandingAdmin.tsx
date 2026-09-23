@@ -665,8 +665,8 @@ function PageSettings({
           Meta Ads Tracking
         </div>
         <Field
-          label="Meta Pixel ID"
-          hint="From Events Manager. Fires PageView on load, Lead on form submit, Contact on WhatsApp or call."
+          label="Extra Meta Pixel ID (optional)"
+          hint="The Lala Stories pixel already runs on every page. Add a campaign-specific pixel here to track this page on a second pixel too. Both get PageView, Lead, Contact and InitiateCheckout."
         >
           <TextInput
             value={settings.metaPixelId}

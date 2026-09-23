@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Cta, ctaHref, ctaOpensNewTab } from "@/types/landing";
-import { trackPixel } from "./MetaPixel";
+import { trackPixel } from "@/components/analytics/MetaPixel";
 import { cn } from "@/utils/helpers";
 
 /** Anchor the lead form carries, so "form" CTAs have somewhere to scroll. */

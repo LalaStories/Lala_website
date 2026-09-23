@@ -8,7 +8,8 @@ import { parseBlocks } from "@/types/landing";
 import { Story, Testimonial, FAQItem } from "@/types";
 import LandingBackground from "@/components/landing/LandingBackground";
 import BlockRenderer from "@/components/landing/BlockRenderer";
-import MetaPixel from "@/components/landing/MetaPixel";
+import MetaPixel from "@/components/analytics/MetaPixel";
+import { SITE_META_PIXEL_ID } from "@/lib/meta-pixel";
 
 // Campaign content changes mid-flight, so never serve a stale page.
 export const dynamic = "force-dynamic";
@@ -63,6 +64,11 @@ export default async function LandingPageRoute({ params }: PageProps) {
 
   const blocks = parseBlocks(page.blocks);
 
+  // The site pixel already loads from the root layout. A campaign pixel is
+  // added on top only when it is a different one, so nothing fires twice.
+  const campaignPixelId =
+    page.metaPixelId && page.metaPixelId !== SITE_META_PIXEL_ID ? page.metaPixelId : null;
+
   // Only query shared tables the page actually uses.
   const needsStories = blocks.some((b) => b.enabled && b.type === "stories");
   const needsTestimonials = blocks.some(
@@ -114,7 +120,7 @@ export default async function LandingPageRoute({ params }: PageProps) {
     // The dark colour lives on this wrapper as well as the fixed background
     // layer, so mobile overscroll never flashes the white site body.
     <div className="relative min-h-screen bg-[#0F0826]">
-      <MetaPixel pixelId={page.metaPixelId} />
+      <MetaPixel pixelId={campaignPixelId} />
 
       <LandingBackground
         type={page.bgType}
