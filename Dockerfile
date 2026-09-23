@@ -25,8 +25,9 @@ RUN npx prisma generate
 # undefined in the browser. On Railway, add this under Build-time Variables.
 ARG NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY=""
 ENV NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY=$NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY
-# Optional override for the site Meta Pixel; defaults to the Lala pixel in src/lib/meta-pixel.ts
-ARG NEXT_PUBLIC_META_PIXEL_ID
+# Optional override for the site Meta Pixel. Empty (the default) means the
+# Lala pixel hardcoded in src/lib/meta-pixel.ts — that file treats "" as unset.
+ARG NEXT_PUBLIC_META_PIXEL_ID=""
 ENV NEXT_PUBLIC_META_PIXEL_ID=$NEXT_PUBLIC_META_PIXEL_ID
 
 # Build Next.js in production standalone mode
