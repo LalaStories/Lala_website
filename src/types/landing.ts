@@ -16,6 +16,12 @@ export type CtaType =
   | "internal" // another page on this site, e.g. /premium
   | "external"; // any other URL
 
+/**
+ * Smart download link: sends each visitor to the right store for their
+ * device. An "appstore" CTA with an empty value falls back to it.
+ */
+export const APP_DOWNLOAD_URL = "https://go.lalastories.com/kidsapp";
+
 export interface Cta {
   label: string;
   type: CtaType;
@@ -39,7 +45,7 @@ export const CTA_VALUE_PLACEHOLDER: Record<CtaType, string> = {
   form: "— not needed —",
   whatsapp: "919876543210 (country code, no +)",
   call: "+919876543210",
-  appstore: "https://play.google.com/store/apps/details?id=...",
+  appstore: `${APP_DOWNLOAD_URL} (default when empty)`,
   internal: "/premium",
   external: "https://example.com",
 };
@@ -64,6 +70,7 @@ export function ctaHref(cta: Cta): string | null {
     case "internal":
       return value.startsWith("/") ? value : `/${value}`;
     case "appstore":
+      return value || APP_DOWNLOAD_URL;
     case "external":
       return value || null;
     default:
@@ -277,7 +284,7 @@ export function newId(): string {
 const emptyCta = (label: string, type: CtaType = "form"): Cta => ({
   label,
   type,
-  value: "",
+  value: type === "appstore" ? APP_DOWNLOAD_URL : "",
   message: "",
 });
 
