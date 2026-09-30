@@ -51,6 +51,13 @@ function asSlug(value: unknown): string {
   return /^[a-z0-9][a-z0-9-_]*$/i.test(text) ? text : "";
 }
 
+function asIsoDate(value: unknown): string | null {
+  const text = asText(value, 40);
+  if (!text) return null;
+  const time = Date.parse(text);
+  return Number.isNaN(time) ? null : new Date(time).toISOString();
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -68,9 +75,12 @@ function parseSubscription(raw: unknown): ShopSubscriptionInfo | null {
   if (!isRecord(raw)) return null;
   const title = asText(raw.title, 120);
   if (!title) return null;
+  const qty = asFiniteNumber(raw.qty) ?? 1;
   return {
+    planId: asFiniteNumber(raw.plan_id),
     title,
     durationLabel: asText(raw.duration_label, 80),
+    qty: Math.min(Math.max(Math.round(qty), 1), 99),
     platformNote: asText(raw.platform_note, MAX_NOTE_LENGTH),
   };
 }
@@ -93,9 +103,13 @@ function parseProduct(raw: unknown): ShopProduct | null {
     type: parseType(raw.type),
     coverImage: asHttpsUrl(raw.cover_image),
     price,
+    pricePrefix: asText(raw.price_prefix, 20),
     mrp: mrp !== null && mrp > price ? mrp : null,
     discountPercent: Math.min(Math.max(Math.round(discount), 0), 100),
     isOnOffer: raw.is_on_offer === true,
+    offerEndsAt: asIsoDate(raw.offer_ends_at),
+    hasVariants: raw.has_variants === true,
+    isBundle: raw.is_bundle === true,
     inStock: raw.in_stock === true,
     availableQty: Math.max(Math.round(qty), 0),
     includesSubscription: raw.includes_subscription === true,
@@ -143,4 +157,42 @@ export async function getShopHome(): Promise<ShopHomeData | null> {
     console.error("shop-home API request failed", error);
     return null;
   }
+}
+
+/** Every product in the feed, deduped by id, offers first. */
+export function collectProducts(shop: ShopHomeData): ShopProduct[] {
+  const seen = new Map<number, ShopProduct>();
+  for (const product of [...shop.onOffer, ...shop.latest]) {
+    if (!seen.has(product.id)) seen.set(product.id, product);
+  }
+  return Array.from(seen.values());
+}
+
+/**
+ * Looks a product up by slug. The upstream API exposes no per-product
+ * endpoint, so detail pages are served from the shop-home feed: only
+ * products listed there can resolve.
+ */
+export async function getShopProduct(
+  slug: string
+): Promise<{ product: ShopProduct; related: ShopProduct[] } | null> {
+  const safeSlug = asSlug(slug);
+  if (!safeSlug) return null;
+
+  const shop = await getShopHome();
+  if (!shop) return null;
+
+  const products = collectProducts(shop);
+  const product = products.find(
+    (item) => item.slug.toLowerCase() === safeSlug.toLowerCase()
+  );
+  if (!product) return null;
+
+  const related = products
+    .filter(
+      (item) => item.id !== product.id && item.type?.id === product.type?.id
+    )
+    .slice(0, 3);
+
+  return { product, related };
 }

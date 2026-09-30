@@ -6,8 +6,10 @@ export interface ShopProductType {
 }
 
 export interface ShopSubscriptionInfo {
+  planId: number | null;
   title: string;
   durationLabel: string;
+  qty: number;
   platformNote: string;
 }
 
@@ -18,9 +20,13 @@ export interface ShopProduct {
   type: ShopProductType | null;
   coverImage: string | null;
   price: number;
+  pricePrefix: string;
   mrp: number | null;
   discountPercent: number;
   isOnOffer: boolean;
+  offerEndsAt: string | null;
+  hasVariants: boolean;
+  isBundle: boolean;
   inStock: boolean;
   availableQty: number;
   includesSubscription: boolean;
