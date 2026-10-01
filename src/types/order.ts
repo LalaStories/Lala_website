@@ -31,6 +31,19 @@ export interface PlaceOrderPayload {
 export interface PlacedOrder {
   reference: string | null;
   message: string;
+  /** The shop's own order id, needed to verify the payment afterwards. */
+  orderId: number | null;
+  /** Razorpay's order handle, present only when payment is expected. */
+  razorpayOrderId: string | null;
+  /** Amount in paise, as Razorpay counts it. */
+  amount: number | null;
+}
+
+/** What Razorpay hands back once the customer has paid. */
+export interface RazorpayResult {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
 }
 
 export type OrderFieldErrors = Partial<
@@ -49,7 +62,7 @@ export type OrderFieldErrors = Partial<
 >;
 
 export interface OrderFormState {
-  status: "idle" | "success" | "error";
+  status: "idle" | "success" | "error" | "awaiting_payment";
   message: string;
   fieldErrors: OrderFieldErrors;
   order: PlacedOrder | null;

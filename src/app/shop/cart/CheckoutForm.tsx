@@ -7,9 +7,12 @@ import { placeOrderAction } from "@/app/shop/actions";
 import { EMPTY_ORDER_STATE } from "@/types/order";
 import type { OrderFieldErrors } from "@/types/order";
 import type { ShopProduct } from "@/types/shop";
+import RazorpayCheckout from "@/components/shop/RazorpayCheckout";
 
 interface CheckoutFormProps {
   products: ShopProduct[];
+  /** Null when online payment is switched off. */
+  razorpayKeyId: string | null;
 }
 
 /** Why a basket line can't be ordered online — mirrors the server's rules. */
@@ -77,7 +80,7 @@ type PincodeStatus =
   | { kind: "found"; label: string; areas: string[] }
   | { kind: "missing" };
 
-export default function CheckoutForm({ products }: CheckoutFormProps) {
+export default function CheckoutForm({ products, razorpayKeyId }: CheckoutFormProps) {
   const { lines, ready, setQty, removeItem, clear } = useCart();
   const [state, formAction, pending] = useActionState(placeOrderAction, EMPTY_ORDER_STATE);
 
@@ -161,10 +164,24 @@ export default function CheckoutForm({ products }: CheckoutFormProps) {
 
   // The order is placed; the basket has served its purpose.
   useEffect(() => {
-    if (state.status === "success") clear();
+    if (state.status === "success" || state.status === "awaiting_payment") clear();
   }, [state.status, clear]);
 
-  if (state.status === "success") {
+  if (state.status === "awaiting_payment" && state.order && razorpayKeyId) {
+    return (
+      <RazorpayCheckout
+        keyId={razorpayKeyId}
+        order={state.order}
+        customer={{
+          name: address.name,
+          phone: address.phone.replace(/\D/g, ""),
+          email: address.email,
+        }}
+      />
+    );
+  }
+
+  if (state.status === "success" || state.status === "awaiting_payment") {
     return (
       <div className="bg-card-bg border border-emerald-500/30 rounded-3xl p-10 text-center space-y-4">
         <span className="text-5xl block">🎉</span>

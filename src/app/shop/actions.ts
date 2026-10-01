@@ -1,8 +1,9 @@
 "use server";
 
 import { headers } from "next/headers";
-import { placeOrder, validateOrder } from "@/lib/order-api";
-import type { OrderFormState } from "@/types/order";
+import { placeOrder, validateOrder, verifyOrderPayment } from "@/lib/order-api";
+import { isPaymentEnabled } from "@/lib/razorpay";
+import type { OrderFormState, RazorpayResult } from "@/types/order";
 
 /**
  * Server Actions are reachable by direct POST, not just through our form, so
@@ -59,10 +60,51 @@ export async function placeOrderAction(
     };
   }
 
+  const needsPayment =
+    isPaymentEnabled() &&
+    result.order.razorpayOrderId !== null &&
+    result.order.orderId !== null;
+
   return {
-    status: "success",
+    status: needsPayment ? "awaiting_payment" : "success",
     message: result.order.message,
     fieldErrors: {},
     order: result.order,
   };
+}
+
+/**
+ * Confirms a Razorpay payment after the customer completes checkout.
+ *
+ * The ids arrive from the browser, which cannot be trusted on its own — the
+ * shop backend re-checks the Razorpay signature against its key secret, so a
+ * forged call is rejected there.
+ */
+export async function verifyPaymentAction(input: {
+  orderId: number;
+  payment: RazorpayResult;
+}): Promise<{ ok: boolean; message: string }> {
+  const { orderId, payment } = input;
+
+  if (
+    !Number.isInteger(orderId) ||
+    typeof payment?.razorpay_order_id !== "string" ||
+    typeof payment?.razorpay_payment_id !== "string" ||
+    typeof payment?.razorpay_signature !== "string"
+  ) {
+    return {
+      ok: false,
+      message:
+        "We couldn't confirm your payment automatically. Our team will check and contact you.",
+    };
+  }
+
+  const result = await verifyOrderPayment({
+    orderId,
+    razorpayOrderId: payment.razorpay_order_id.slice(0, 64),
+    razorpayPaymentId: payment.razorpay_payment_id.slice(0, 64),
+    razorpaySignature: payment.razorpay_signature.slice(0, 256),
+  });
+
+  return { ok: result.ok, message: result.message };
 }

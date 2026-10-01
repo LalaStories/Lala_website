@@ -251,15 +251,60 @@ function parseItemIssues(data: unknown): OrderItemIssue[] {
   });
 }
 
-/** Pulls an order reference out of the response without assuming its name. */
-function readReference(data: unknown): string | null {
-  if (!isRecord(data)) return null;
-  for (const key of ["order_no", "order_number", "reference", "order_id", "id"]) {
-    const value = data[key];
-    if (typeof value === "string" && value.trim()) return value.trim().slice(0, 64);
-    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+/**
+ * Reads the order out of the response without assuming exactly where the
+ * fields sit: some shops nest them under Data.order. Razorpay's order id is
+ * a string like "order_ABC123" while the shop's own id is numeric, so the
+ * two are told apart by type rather than by key name alone.
+ */
+function readPlacedOrder(data: unknown): {
+  reference: string | null;
+  orderId: number | null;
+  razorpayOrderId: string | null;
+  amount: number | null;
+} {
+  const scopes = [data, isRecord(data) ? data.order : null].filter(isRecord);
+
+  let reference: string | null = null;
+  let orderId: number | null = null;
+  let razorpayOrderId: string | null = null;
+  let amount: number | null = null;
+
+  for (const scope of scopes) {
+    for (const key of ["order_no", "order_number", "reference"]) {
+      const value = scope[key];
+      if (reference === null && typeof value === "string" && value.trim()) {
+        reference = value.trim().slice(0, 64);
+      }
+    }
+    for (const key of ["order_id", "id"]) {
+      const value = scope[key];
+      if (orderId === null && typeof value === "number" && Number.isInteger(value)) {
+        orderId = value;
+      }
+    }
+    for (const key of ["razorpay_order_id", "razorpay_id", "rzp_order_id"]) {
+      const value = scope[key];
+      if (
+        razorpayOrderId === null &&
+        typeof value === "string" &&
+        value.trim().startsWith("order_")
+      ) {
+        razorpayOrderId = value.trim().slice(0, 64);
+      }
+    }
+    for (const key of ["amount", "amount_due", "total"]) {
+      const value = scope[key];
+      if (amount === null && typeof value === "number" && Number.isFinite(value)) {
+        amount = value;
+      }
+    }
   }
-  return null;
+
+  // Fall back to the numeric id for display when no reference was given.
+  if (reference === null && orderId !== null) reference = String(orderId);
+
+  return { reference, orderId, razorpayOrderId, amount };
 }
 
 export async function placeOrder(
@@ -339,7 +384,7 @@ export async function placeOrder(
     return {
       ok: true,
       order: {
-        reference: readReference(body.Data),
+        ...readPlacedOrder(body.Data),
         message: upstreamMessage || "Your order has been placed.",
       },
     };
@@ -350,6 +395,85 @@ export async function placeOrder(
       retryable: true,
       message:
         "We couldn't reach the shop to place your order. Please try again in a moment.",
+    };
+  }
+}
+
+export type VerifyPaymentResult =
+  | { ok: true; message: string }
+  | { ok: false; message: string };
+
+/**
+ * Confirms a Razorpay payment with the shop.
+ *
+ * The four field names below were confirmed against the live endpoint; it
+ * rejects camelCase. The signature is checked by the shop backend using the
+ * Razorpay key secret, which this app never holds — that check is what makes
+ * it safe for these ids to travel back through the browser.
+ */
+export async function verifyOrderPayment(input: {
+  orderId: number;
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+}): Promise<VerifyPaymentResult> {
+  try {
+    const res = await fetch(`${SHOP_API_BASE_URL}/api/public/verify-order-payment`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        order_id: input.orderId,
+        razorpay_order_id: input.razorpayOrderId,
+        razorpay_payment_id: input.razorpayPaymentId,
+        razorpay_signature: input.razorpaySignature,
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(PLACE_ORDER_TIMEOUT_MS),
+    });
+
+    if (!res.ok) {
+      console.error(`verify-order-payment responded ${res.status}`);
+      return {
+        ok: false,
+        message:
+          "We couldn't confirm your payment automatically. Our team will check and contact you.",
+      };
+    }
+
+    const body: unknown = await res.json();
+    if (!isRecord(body)) {
+      return {
+        ok: false,
+        message:
+          "We couldn't confirm your payment automatically. Our team will check and contact you.",
+      };
+    }
+
+    const message =
+      typeof body.Message === "string" ? body.Message.trim().slice(0, 300) : "";
+
+    if (body.ErrorCode !== 0) {
+      // The money may well have left the customer's account, so this is
+      // logged loudly and never phrased as "payment failed".
+      console.error("verify-order-payment rejected", body.ErrorCode, message);
+      return {
+        ok: false,
+        message:
+          message ||
+          "We couldn't confirm your payment automatically. Our team will check and contact you.",
+      };
+    }
+
+    return { ok: true, message: message || "Payment confirmed." };
+  } catch (error) {
+    console.error("verify-order-payment request failed", error);
+    return {
+      ok: false,
+      message:
+        "We couldn't confirm your payment automatically. Our team will check and contact you.",
     };
   }
 }

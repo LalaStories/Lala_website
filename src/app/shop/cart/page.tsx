@@ -4,6 +4,7 @@ import Link from "next/link";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { collectProducts, getShopHome } from "@/lib/shop-api";
+import { getRazorpayKeyId } from "@/lib/razorpay";
 import CheckoutForm from "./CheckoutForm";
 
 export const revalidate = 300;
@@ -19,6 +20,9 @@ export default async function CartPage() {
   // The basket itself lives in the browser; this is the live catalog it is
   // rendered against, so prices and stock are never read from localStorage.
   const products = shop ? collectProducts(shop) : [];
+  // Publishable Key ID only; the secret stays with the shop backend. Read at
+  // request time so it comes from the container's env, not the build.
+  const razorpayKeyId = getRazorpayKeyId();
 
   return (
     <div className="flex flex-col min-h-screen font-body bg-secondary text-text-dark">
@@ -37,7 +41,7 @@ export default async function CartPage() {
           </div>
 
           {products.length > 0 ? (
-            <CheckoutForm products={products} />
+            <CheckoutForm products={products} razorpayKeyId={razorpayKeyId} />
           ) : (
             <div className="text-center py-20 bg-card-bg border border-card-border rounded-3xl">
               <span className="text-5xl block">🛒</span>
