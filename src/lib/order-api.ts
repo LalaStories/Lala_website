@@ -252,10 +252,15 @@ function parseItemIssues(data: unknown): OrderItemIssue[] {
 }
 
 /**
- * Reads the order out of the response without assuming exactly where the
- * fields sit: some shops nest them under Data.order. Razorpay's order id is
- * a string like "order_ABC123" while the shop's own id is numeric, so the
- * two are told apart by type rather than by key name alone.
+ * Reads the order out of the place-order response.
+ *
+ * The shape was confirmed from a live order:
+ *   { order_id, order_number, track_token, subtotal, shipping_fee, total,
+ *     reserved_until, razorpay: { ... } }
+ *
+ * Razorpay's own handle lives in the nested `razorpay` object and is a
+ * string like "order_ABC123", while the shop's order_id is numeric — so the
+ * two are told apart by type as well as by where they sit.
  */
 function readPlacedOrder(data: unknown): {
   reference: string | null;
@@ -263,15 +268,16 @@ function readPlacedOrder(data: unknown): {
   razorpayOrderId: string | null;
   amount: number | null;
 } {
-  const scopes = [data, isRecord(data) ? data.order : null].filter(isRecord);
+  const root = isRecord(data) ? data : {};
+  const nested = isRecord(root.order) ? root.order : null;
+  const razorpay = isRecord(root.razorpay) ? root.razorpay : null;
 
   let reference: string | null = null;
   let orderId: number | null = null;
   let razorpayOrderId: string | null = null;
-  let amount: number | null = null;
 
-  for (const scope of scopes) {
-    for (const key of ["order_no", "order_number", "reference"]) {
+  for (const scope of [root, nested].filter(isRecord)) {
+    for (const key of ["order_number", "order_no", "reference"]) {
       const value = scope[key];
       if (reference === null && typeof value === "string" && value.trim()) {
         reference = value.trim().slice(0, 64);
@@ -283,7 +289,12 @@ function readPlacedOrder(data: unknown): {
         orderId = value;
       }
     }
-    for (const key of ["razorpay_order_id", "razorpay_id", "rzp_order_id"]) {
+  }
+
+  // Razorpay ids are always strings prefixed "order_", so this can never
+  // pick up the shop's numeric id by mistake.
+  for (const scope of [razorpay, root].filter(isRecord)) {
+    for (const key of ["id", "razorpay_order_id", "razorpay_id", "rzp_order_id"]) {
       const value = scope[key];
       if (
         razorpayOrderId === null &&
@@ -293,15 +304,16 @@ function readPlacedOrder(data: unknown): {
         razorpayOrderId = value.trim().slice(0, 64);
       }
     }
-    for (const key of ["amount", "amount_due", "total"]) {
-      const value = scope[key];
-      if (amount === null && typeof value === "number" && Number.isFinite(value)) {
-        amount = value;
-      }
-    }
   }
 
-  // Fall back to the numeric id for display when no reference was given.
+  // Only ever the amount Razorpay itself reports, which is in paise. The
+  // top-level `total` is in rupees and would show a figure 100x too small.
+  const razorpayAmount = razorpay?.amount;
+  const amount =
+    typeof razorpayAmount === "number" && Number.isFinite(razorpayAmount)
+      ? razorpayAmount
+      : null;
+
   if (reference === null && orderId !== null) reference = String(orderId);
 
   return { reference, orderId, razorpayOrderId, amount };
@@ -389,9 +401,9 @@ export async function placeOrder(
       "place-order succeeded:",
       JSON.stringify({
         dataKeys: isRecord(body.Data) ? Object.keys(body.Data) : null,
-        orderKeys:
-          isRecord(body.Data) && isRecord(body.Data.order)
-            ? Object.keys(body.Data.order)
+        razorpayKeys:
+          isRecord(body.Data) && isRecord(body.Data.razorpay)
+            ? Object.keys(body.Data.razorpay)
             : null,
         matched: {
           orderId: placed.orderId !== null,
