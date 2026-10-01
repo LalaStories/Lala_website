@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { placeOrder, validateOrder, verifyOrderPayment } from "@/lib/order-api";
-import { isPaymentEnabled } from "@/lib/razorpay";
+import { getRazorpayKeyId } from "@/lib/razorpay";
 import type { OrderFormState, RazorpayResult } from "@/types/order";
 
 /**
@@ -30,6 +30,7 @@ export async function placeOrderAction(
       message: validated.message,
       fieldErrors: validated.fieldErrors,
       order: null,
+      razorpayKeyId: null,
     };
   }
 
@@ -57,11 +58,13 @@ export async function placeOrderAction(
         : result.message,
       fieldErrors: details.length ? { items: "Please update your basket." } : {},
       order: null,
+      razorpayKeyId: null,
     };
   }
 
+  const razorpayKeyId = getRazorpayKeyId();
   const needsPayment =
-    isPaymentEnabled() &&
+    razorpayKeyId !== null &&
     result.order.razorpayOrderId !== null &&
     result.order.orderId !== null;
 
@@ -70,6 +73,7 @@ export async function placeOrderAction(
     message: result.order.message,
     fieldErrors: {},
     order: result.order,
+    razorpayKeyId: needsPayment ? razorpayKeyId : null,
   };
 }
 

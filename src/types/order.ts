@@ -66,6 +66,13 @@ export interface OrderFormState {
   message: string;
   fieldErrors: OrderFieldErrors;
   order: PlacedOrder | null;
+  /**
+   * Razorpay's publishable Key ID, sent only when a payment is actually
+   * due. Supplied by the action rather than the page because the cart page
+   * is prerendered, which would otherwise bake in whatever the key was at
+   * build time.
+   */
+  razorpayKeyId: string | null;
 }
 
 export const EMPTY_ORDER_STATE: OrderFormState = {
@@ -73,4 +80,5 @@ export const EMPTY_ORDER_STATE: OrderFormState = {
   message: "",
   fieldErrors: {},
   order: null,
+  razorpayKeyId: null,
 };

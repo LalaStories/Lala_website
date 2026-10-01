@@ -11,8 +11,6 @@ import RazorpayCheckout from "@/components/shop/RazorpayCheckout";
 
 interface CheckoutFormProps {
   products: ShopProduct[];
-  /** Null when online payment is switched off. */
-  razorpayKeyId: string | null;
 }
 
 /** Why a basket line can't be ordered online — mirrors the server's rules. */
@@ -80,7 +78,7 @@ type PincodeStatus =
   | { kind: "found"; label: string; areas: string[] }
   | { kind: "missing" };
 
-export default function CheckoutForm({ products, razorpayKeyId }: CheckoutFormProps) {
+export default function CheckoutForm({ products }: CheckoutFormProps) {
   const { lines, ready, setQty, removeItem, clear } = useCart();
   const [state, formAction, pending] = useActionState(placeOrderAction, EMPTY_ORDER_STATE);
 
@@ -167,10 +165,10 @@ export default function CheckoutForm({ products, razorpayKeyId }: CheckoutFormPr
     if (state.status === "success" || state.status === "awaiting_payment") clear();
   }, [state.status, clear]);
 
-  if (state.status === "awaiting_payment" && state.order && razorpayKeyId) {
+  if (state.status === "awaiting_payment" && state.order && state.razorpayKeyId) {
     return (
       <RazorpayCheckout
-        keyId={razorpayKeyId}
+        keyId={state.razorpayKeyId}
         order={state.order}
         customer={{
           name: address.name,
