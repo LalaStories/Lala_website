@@ -381,10 +381,30 @@ export async function placeOrder(
       };
     }
 
+    const placed = readPlacedOrder(body.Data);
+
+    // Field names only — never values — so the response shape can be checked
+    // without putting a customer's address or phone number in the logs.
+    console.info(
+      "place-order succeeded:",
+      JSON.stringify({
+        dataKeys: isRecord(body.Data) ? Object.keys(body.Data) : null,
+        orderKeys:
+          isRecord(body.Data) && isRecord(body.Data.order)
+            ? Object.keys(body.Data.order)
+            : null,
+        matched: {
+          orderId: placed.orderId !== null,
+          razorpayOrderId: placed.razorpayOrderId !== null,
+          amount: placed.amount !== null,
+        },
+      })
+    );
+
     return {
       ok: true,
       order: {
-        ...readPlacedOrder(body.Data),
+        ...placed,
         message: upstreamMessage || "Your order has been placed.",
       },
     };
