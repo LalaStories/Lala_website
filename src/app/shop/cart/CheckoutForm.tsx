@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useActionState, useEffect, useMemo } from "react";
+import React, { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/store/CartStore";
 import { placeOrderAction } from "@/app/shop/actions";
@@ -58,9 +58,83 @@ function Field({
 const inputClass =
   "w-full rounded-2xl border border-card-border bg-secondary text-text-dark px-4 py-2.5 text-sm focus:border-[#FF7A2F] focus:outline-hidden transition-all placeholder-text-muted/60";
 
+const EMPTY_ADDRESS = {
+  name: "",
+  phone: "",
+  line1: "",
+  line2: "",
+  city: "",
+  state: "",
+  pincode: "",
+  email: "",
+};
+
+type AddressFields = typeof EMPTY_ADDRESS;
+
+type PincodeStatus =
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | { kind: "found"; label: string; areas: string[] }
+  | { kind: "missing" };
+
 export default function CheckoutForm({ products }: CheckoutFormProps) {
   const { lines, ready, setQty, removeItem, clear } = useCart();
   const [state, formAction, pending] = useActionState(placeOrderAction, EMPTY_ORDER_STATE);
+
+  // Controlled so a rejected submission doesn't wipe the address: React
+  // resets uncontrolled fields once a form action settles.
+  const [address, setAddress] = useState<AddressFields>(EMPTY_ADDRESS);
+  const [pincodeStatus, setPincodeStatus] = useState<PincodeStatus>({ kind: "idle" });
+  const lookupRef = useRef<AbortController | null>(null);
+
+  const setField = (key: keyof AddressFields) => (value: string) =>
+    setAddress((prev) => ({ ...prev, [key]: value }));
+
+  /**
+   * Filling in a full PIN looks up its district and state, so the customer
+   * doesn't type what the PIN already tells us. Both stay editable.
+   */
+  function handlePincodeChange(value: string) {
+    setAddress((prev) => ({ ...prev, pincode: value }));
+
+    const pin = value.replace(/\D/g, "");
+    lookupRef.current?.abort();
+    if (pin.length !== 6) {
+      setPincodeStatus({ kind: "idle" });
+      return;
+    }
+
+    const controller = new AbortController();
+    lookupRef.current = controller;
+    setPincodeStatus({ kind: "loading" });
+
+    fetch(`/api/pincode/${pin}`, { signal: controller.signal })
+      .then((res) => res.json())
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        if (data?.found && typeof data.state === "string") {
+          const areas: string[] = Array.isArray(data.areas) ? data.areas : [];
+          setAddress((prev) => ({
+            ...prev,
+            city: data.district || prev.city,
+            state: data.state,
+          }));
+          setPincodeStatus({
+            kind: "found",
+            label: `${data.district}, ${data.state}`,
+            areas,
+          });
+        } else {
+          setPincodeStatus({ kind: "missing" });
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setPincodeStatus({ kind: "missing" });
+      });
+  }
+
+  // Drop any in-flight lookup when the form goes away.
+  useEffect(() => () => lookupRef.current?.abort(), []);
 
   const catalog = useMemo(
     () => new Map(products.map((product) => [product.id, product])),
@@ -240,6 +314,8 @@ export default function CheckoutForm({ products }: CheckoutFormProps) {
               required
               maxLength={120}
               autoComplete="name"
+              value={address.name}
+              onChange={(e) => setField("name")(e.target.value)}
               aria-invalid={Boolean(state.fieldErrors.name)}
               className={inputClass}
               placeholder="Who should we deliver to?"
@@ -264,6 +340,8 @@ export default function CheckoutForm({ products }: CheckoutFormProps) {
                 inputMode="numeric"
                 maxLength={15}
                 autoComplete="tel-national"
+                value={address.phone}
+                onChange={(e) => setField("phone")(e.target.value)}
                 aria-invalid={Boolean(state.fieldErrors.phone)}
                 className={inputClass}
                 placeholder="9876543210"
@@ -279,6 +357,8 @@ export default function CheckoutForm({ products }: CheckoutFormProps) {
             required
             maxLength={255}
             autoComplete="address-line1"
+            value={address.line1}
+            onChange={(e) => setField("line1")(e.target.value)}
             aria-invalid={Boolean(state.fieldErrors.line1)}
             className={inputClass}
             placeholder="House / flat, street"
@@ -291,19 +371,47 @@ export default function CheckoutForm({ products }: CheckoutFormProps) {
             name="line2"
             maxLength={255}
             autoComplete="address-line2"
+            value={address.line2}
+            onChange={(e) => setField("line2")(e.target.value)}
             className={inputClass}
             placeholder="Landmark, area (optional)"
           />
         </Field>
 
+        {/* PIN first: it fills in the two fields after it. */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <Field label="City" name="city" errors={state.fieldErrors} required>
+          <Field
+            label="PIN code"
+            name="pincode"
+            errors={state.fieldErrors}
+            required
+            hint="6 digits — we'll fill in your district and state."
+          >
+            <input
+              id="pincode"
+              name="pincode"
+              required
+              inputMode="numeric"
+              maxLength={10}
+              autoComplete="postal-code"
+              value={address.pincode}
+              onChange={(e) => handlePincodeChange(e.target.value)}
+              aria-invalid={Boolean(state.fieldErrors.pincode)}
+              aria-describedby="pincode-status"
+              className={inputClass}
+              placeholder="682001"
+            />
+          </Field>
+
+          <Field label="City / District" name="city" errors={state.fieldErrors} required>
             <input
               id="city"
               name="city"
               required
               maxLength={100}
               autoComplete="address-level2"
+              value={address.city}
+              onChange={(e) => setField("city")(e.target.value)}
               aria-invalid={Boolean(state.fieldErrors.city)}
               className={inputClass}
             />
@@ -316,25 +424,36 @@ export default function CheckoutForm({ products }: CheckoutFormProps) {
               required
               maxLength={100}
               autoComplete="address-level1"
+              value={address.state}
+              onChange={(e) => setField("state")(e.target.value)}
               aria-invalid={Boolean(state.fieldErrors.state)}
               className={inputClass}
             />
           </Field>
-
-          <Field label="PIN code" name="pincode" errors={state.fieldErrors} required>
-            <input
-              id="pincode"
-              name="pincode"
-              required
-              inputMode="numeric"
-              maxLength={10}
-              autoComplete="postal-code"
-              aria-invalid={Boolean(state.fieldErrors.pincode)}
-              className={inputClass}
-              placeholder="682001"
-            />
-          </Field>
         </div>
+
+        <p id="pincode-status" aria-live="polite" className="text-[11px] -mt-2">
+          {pincodeStatus.kind === "loading" && (
+            <span className="text-text-muted">Looking up PIN code…</span>
+          )}
+          {pincodeStatus.kind === "found" && (
+            <span className="font-bold text-emerald-600">
+              ✓ {pincodeStatus.label}
+              {pincodeStatus.areas.length > 0 && (
+                <span className="font-normal text-text-muted">
+                  {" "}
+                  · {pincodeStatus.areas.slice(0, 4).join(", ")}
+                </span>
+              )}
+            </span>
+          )}
+          {pincodeStatus.kind === "missing" && (
+            <span className="font-bold text-amber-600">
+              We couldn&apos;t look that PIN code up — please type your district
+              and state.
+            </span>
+          )}
+        </p>
 
         <Field
           label="Email"
@@ -348,6 +467,8 @@ export default function CheckoutForm({ products }: CheckoutFormProps) {
             type="email"
             maxLength={160}
             autoComplete="email"
+            value={address.email}
+            onChange={(e) => setField("email")(e.target.value)}
             aria-invalid={Boolean(state.fieldErrors.email)}
             className={inputClass}
             placeholder="you@example.com"
