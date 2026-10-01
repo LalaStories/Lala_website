@@ -4,6 +4,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { getShopHome } from "@/lib/shop-api";
 import ShopCatalog from "./ShopCatalog";
+import CartLink from "@/components/shop/CartLink";
 
 export const revalidate = 300;
 
@@ -33,6 +34,9 @@ export default async function ShopPage() {
               Explore our storybooks, plush toys, and combo packs — some even
               bundle a LALA Stories app subscription for extra bedtime magic.
             </p>
+            <div className="flex justify-center pt-2">
+              <CartLink />
+            </div>
           </div>
 
           {shop ? (

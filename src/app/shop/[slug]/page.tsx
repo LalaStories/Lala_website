@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ProductCard from "@/components/shop/ProductCard";
+import AddToCart from "@/components/shop/AddToCart";
+import CartLink from "@/components/shop/CartLink";
 import { collectProducts, getShopHome, getShopProduct } from "@/lib/shop-api";
 
 export const revalidate = 300;
@@ -79,10 +81,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
         />
         <div className="max-w-6xl mx-auto px-6 space-y-16">
           {/* Breadcrumb */}
-          <nav className="text-sm text-text-muted">
+          <nav className="flex items-center justify-between gap-4 text-sm text-text-muted">
             <Link href="/shop" className="hover:text-[#FF7A2F] font-bold">
               ← Back to Shop
             </Link>
+            <CartLink />
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -197,28 +200,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 </ul>
               )}
 
-              {/* Ordering */}
-              <div className="bg-card-bg border border-card-border rounded-3xl p-6 space-y-3">
-                <h2 className="font-heading font-extrabold text-lg">How to order</h2>
-                <p className="text-sm text-text-muted leading-relaxed">
-                  Online checkout isn&apos;t available on the website yet. Reach our
-                  team and we&apos;ll help you complete your purchase.
-                </p>
-                <div className="flex flex-wrap gap-3 pt-1">
-                  <Link
-                    href="/help"
-                    className="inline-flex items-center gap-1.5 px-6 py-3 rounded-full bg-[#FF7A2F] hover:bg-[#E55A10] text-white text-sm font-extrabold shadow-md hover:shadow-lg transition-all"
-                  >
-                    Enquire to order →
-                  </Link>
-                  <a
-                    href="tel:+918590166898"
-                    className="inline-flex items-center gap-1.5 px-6 py-3 rounded-full bg-secondary border border-card-border hover:border-orange-500/30 text-sm font-extrabold transition-all"
-                  >
-                    📞 Call us
-                  </a>
-                </div>
-              </div>
+              <AddToCart product={product} />
             </div>
           </div>
 
