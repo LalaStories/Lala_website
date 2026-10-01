@@ -62,7 +62,9 @@ export async function placeOrderAction(
     };
   }
 
-  const razorpayKeyId = getRazorpayKeyId();
+  // The shop's own key wins: paying a test-mode order with a live key (or
+  // the reverse) is rejected by Razorpay.
+  const razorpayKeyId = result.order.razorpayKey ?? getRazorpayKeyId();
   const needsPayment =
     razorpayKeyId !== null &&
     result.order.razorpayOrderId !== null &&

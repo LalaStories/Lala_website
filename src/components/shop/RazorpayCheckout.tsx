@@ -120,7 +120,7 @@ export default function RazorpayCheckout({
       // Razorpay takes the real amount from the order it already holds; this
       // is only what the customer sees while paying.
       ...(order.amount !== null ? { amount: order.amount } : {}),
-      currency: "INR",
+      currency: order.currency ?? "INR",
       prefill: {
         name: customer.name,
         contact: customer.phone,

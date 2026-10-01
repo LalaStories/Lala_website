@@ -267,6 +267,8 @@ function readPlacedOrder(data: unknown): {
   orderId: number | null;
   razorpayOrderId: string | null;
   amount: number | null;
+  razorpayKey: string | null;
+  currency: string | null;
 } {
   const root = isRecord(data) ? data : {};
   const nested = isRecord(root.order) ? root.order : null;
@@ -294,7 +296,7 @@ function readPlacedOrder(data: unknown): {
   // Razorpay ids are always strings prefixed "order_", so this can never
   // pick up the shop's numeric id by mistake.
   for (const scope of [razorpay, root].filter(isRecord)) {
-    for (const key of ["id", "razorpay_order_id", "razorpay_id", "rzp_order_id"]) {
+    for (const key of ["order_id", "id", "razorpay_order_id", "razorpay_id", "rzp_order_id"]) {
       const value = scope[key];
       if (
         razorpayOrderId === null &&
@@ -314,9 +316,23 @@ function readPlacedOrder(data: unknown): {
       ? razorpayAmount
       : null;
 
+  // The shop reports the account that holds this order; trusting it keeps
+  // test orders on test keys and live orders on live keys.
+  const keyRaw = razorpay?.key;
+  const razorpayKey =
+    typeof keyRaw === "string" && /^rzp_(test|live)_[A-Za-z0-9]+$/.test(keyRaw.trim())
+      ? keyRaw.trim()
+      : null;
+
+  const currencyRaw = razorpay?.currency;
+  const currency =
+    typeof currencyRaw === "string" && /^[A-Z]{3}$/.test(currencyRaw.trim())
+      ? currencyRaw.trim()
+      : null;
+
   if (reference === null && orderId !== null) reference = String(orderId);
 
-  return { reference, orderId, razorpayOrderId, amount };
+  return { reference, orderId, razorpayOrderId, amount, razorpayKey, currency };
 }
 
 export async function placeOrder(

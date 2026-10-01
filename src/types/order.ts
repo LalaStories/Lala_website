@@ -37,6 +37,13 @@ export interface PlacedOrder {
   razorpayOrderId: string | null;
   /** Amount in paise, as Razorpay counts it. */
   amount: number | null;
+  /**
+   * The Key ID the shop created this order under. Preferred over our own
+   * configured key: a test-mode order must be paid with a test key, so
+   * using the shop's avoids a mode mismatch.
+   */
+  razorpayKey: string | null;
+  currency: string | null;
 }
 
 /** What Razorpay hands back once the customer has paid. */
