@@ -510,8 +510,7 @@ export default function CheckoutForm({ products }: CheckoutFormProps) {
           {pending ? "Placing your order…" : "Place order"}
         </button>
         <p className="text-xs text-text-muted">
-          No payment is taken online — the shop will contact you to confirm your
-          order.
+          You&apos;ll be taken to a secure Razorpay payment screen.
         </p>
       </div>
     </form>

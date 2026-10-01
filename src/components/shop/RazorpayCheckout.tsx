@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { verifyPaymentAction } from "@/app/shop/actions";
 import type { PlacedOrder, RazorpayResult } from "@/types/order";
@@ -73,7 +73,7 @@ export default function RazorpayCheckout({
   order,
   customer,
 }: RazorpayCheckoutProps) {
-  const [payState, setPayState] = useState<PayState>({ kind: "ready" });
+  const [payState, setPayState] = useState<PayState>({ kind: "opening" });
   // Guards against a double "handler" call verifying the same payment twice.
   const verifyingRef = useRef(false);
 
@@ -100,7 +100,6 @@ export default function RazorpayCheckout({
 
   const pay = useCallback(async () => {
     if (!order.razorpayOrderId) return;
-    setPayState({ kind: "opening" });
 
     const loaded = await loadRazorpay();
     if (!loaded || !window.Razorpay) {
@@ -134,8 +133,7 @@ export default function RazorpayCheckout({
         ondismiss: () =>
           setPayState({
             kind: "failed",
-            message:
-              "Payment was cancelled. Your order is saved — you can pay now or our team will contact you.",
+            message: "Payment was cancelled. You can try again below.",
           }),
       },
     });
@@ -144,12 +142,23 @@ export default function RazorpayCheckout({
       setPayState({
         kind: "failed",
         message:
-          "That payment didn't go through. Your order is saved — please try again.",
+          "That payment didn't go through. Please try again.",
       });
     });
 
     checkout.open();
   }, [keyId, order, customer, verify]);
+
+  // Take the customer straight into Razorpay rather than asking them to
+  // click twice. Handing off to a third-party modal is the external-system
+  // synchronisation an effect is for; pay() only changes state after an
+  // await, well past the render it was started from.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void pay();
+    // Mount only: re-running would reopen the modal under the customer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (payState.kind === "paid") {
     return (
@@ -202,14 +211,16 @@ export default function RazorpayCheckout({
     <div className="bg-card-bg border border-card-border rounded-3xl p-10 text-center space-y-4">
       <span className="text-5xl block">🔒</span>
       <h2 className="font-heading font-extrabold text-2xl">
-        {payState.kind === "verifying" ? "Confirming your payment…" : "Complete your payment"}
+        {payState.kind === "verifying"
+          ? "Confirming your payment…"
+          : payState.kind === "opening"
+            ? "Opening secure payment…"
+            : "Payment not completed"}
       </h2>
       <p className="text-text-muted text-sm max-w-md mx-auto leading-relaxed">
         {payState.kind === "failed"
           ? payState.message
-          : payState.kind === "verifying"
-            ? "Please don't close this page."
-            : "Your order is saved. Finish the payment to confirm it."}
+          : "Please don't close this page."}
       </p>
       {order.reference && (
         <p className="font-heading text-sm font-extrabold">

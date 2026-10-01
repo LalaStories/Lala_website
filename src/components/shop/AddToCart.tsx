@@ -112,7 +112,7 @@ export default function AddToCart({ product }: { product: ShopProduct }) {
         </p>
       )}
       <p className="text-xs text-text-muted">
-        No payment is taken online — the shop will contact you to confirm your order.
+        Secure payment by card, UPI or netbanking at checkout.
       </p>
     </div>
   );
