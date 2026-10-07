@@ -9,7 +9,7 @@ import type {
 // avoids CORS. Overridable per environment without a code change.
 const SHOP_API_BASE_URL =
   process.env.SHOP_API_BASE_URL?.replace(/\/+$/, "") ||
-  "https://cpaneldev2.lalastories.com";
+  "https://cpanel.lalastories.com";
 
 const FETCH_TIMEOUT_MS = 10_000;
 const REVALIDATE_SECONDS = 300;

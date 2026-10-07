@@ -10,7 +10,7 @@ import { collectProducts, getShopHome } from "@/lib/shop-api";
 // Server-side only. Same origin as the catalog feed.
 const SHOP_API_BASE_URL =
   process.env.SHOP_API_BASE_URL?.replace(/\/+$/, "") ||
-  "https://cpaneldev2.lalastories.com";
+  "https://cpanel.lalastories.com";
 
 const PLACE_ORDER_TIMEOUT_MS = 20_000;
 
