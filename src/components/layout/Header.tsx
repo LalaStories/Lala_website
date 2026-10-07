@@ -103,10 +103,10 @@ export const Header: React.FC = () => {
             Reviews
           </Link>
           <Link
-            href="/products"
+            href="/shop"
             className="hover:text-[#FF7A2F] relative py-1 transition-colors after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:height-[2.5px] after:bg-[#FF7A2F] after:rounded-sm after:transition-all hover:after:w-full"
           >
-            Books & Toys
+            Shop
           </Link>
           <Link
             href="/premium"
@@ -213,11 +213,11 @@ export const Header: React.FC = () => {
           Reviews
         </Link>
         <Link
-          href="/products"
+          href="/shop"
           onClick={() => setIsMobileMenuOpen(false)}
           className="hover:text-[#FF7A2F] transition-colors"
         >
-          Books & Toys
+          Shop
         </Link>
         <Link
           href="/premium"
