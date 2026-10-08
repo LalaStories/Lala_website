@@ -1,7 +1,11 @@
 import type {
+  ShopBundleItem,
   ShopHomeData,
   ShopProduct,
+  ShopProductDetail,
+  ShopProductDetailRow,
   ShopProductType,
+  ShopProductVariant,
   ShopSubscriptionInfo,
 } from "@/types/shop";
 
@@ -19,6 +23,8 @@ const REVALIDATE_SECONDS = 300;
 const MAX_ITEMS = 100;
 const MAX_TEXT_LENGTH = 300;
 const MAX_NOTE_LENGTH = 600;
+const MAX_DESCRIPTION_LENGTH = 4000;
+const MAX_IMAGES = 12;
 
 function asText(value: unknown, maxLength = MAX_TEXT_LENGTH): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
@@ -168,14 +174,146 @@ export function collectProducts(shop: ShopHomeData): ShopProduct[] {
   return Array.from(seen.values());
 }
 
+function firstText(raw: Record<string, unknown>, keys: string[], max: number): string {
+  for (const key of keys) {
+    const value = asText(raw[key], max);
+    if (value) return value;
+  }
+  return "";
+}
+
+// The feed documents `details` loosely; accept "text", {label,value} and
+// close cousins, and drop anything else rather than render junk.
+function parseDetailRow(raw: unknown): ShopProductDetailRow | null {
+  if (typeof raw === "string") {
+    const value = asText(raw, MAX_NOTE_LENGTH);
+    return value ? { label: "", value } : null;
+  }
+  if (!isRecord(raw)) return null;
+  const label = firstText(raw, ["label", "key", "title", "name"], 120);
+  const rawValue = raw.value ?? raw.text ?? raw.description;
+  const value =
+    typeof rawValue === "number" && Number.isFinite(rawValue)
+      ? String(rawValue)
+      : asText(rawValue, MAX_NOTE_LENGTH);
+  if (!label && !value) return null;
+  return { label, value };
+}
+
+function parseVariant(raw: unknown): ShopProductVariant | null {
+  if (!isRecord(raw)) return null;
+  const name = firstText(raw, ["name", "title", "label"], 120);
+  if (!name) return null;
+  return {
+    id: asFiniteNumber(raw.id),
+    name,
+    price: asFiniteNumber(raw.price),
+    mrp: asFiniteNumber(raw.mrp),
+    inStock: typeof raw.in_stock === "boolean" ? raw.in_stock : null,
+  };
+}
+
+function parseBundleItem(raw: unknown): ShopBundleItem | null {
+  if (!isRecord(raw)) return null;
+  const title = firstText(raw, ["title", "name"], 160);
+  if (!title) return null;
+  const qty = asFiniteNumber(raw.qty) ?? asFiniteNumber(raw.quantity) ?? 1;
+  return {
+    id: asFiniteNumber(raw.id) ?? asFiniteNumber(raw.product_id),
+    title,
+    qty: Math.min(Math.max(Math.round(qty), 1), 99),
+    coverImage: asHttpsUrl(raw.cover_image ?? raw.image),
+  };
+}
+
+function parseImages(raw: unknown, cover: string | null): string[] {
+  const seen = new Set<string>();
+  const images: string[] = [];
+  const push = (value: unknown) => {
+    const url = asHttpsUrl(value);
+    if (url && !seen.has(url) && images.length < MAX_IMAGES) {
+      seen.add(url);
+      images.push(url);
+    }
+  };
+  push(cover);
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      // Some feeds wrap each image as { url } instead of a bare string.
+      push(isRecord(item) ? item.url ?? item.src ?? item.image : item);
+    }
+  }
+  return images;
+}
+
+/** The feed's card data padded to the detail shape, used when the detail call fails. */
+function withEmptyDetail(product: ShopProduct): ShopProductDetail {
+  return {
+    ...product,
+    description: "",
+    images: product.coverImage ? [product.coverImage] : [],
+    details: [],
+    variants: [],
+    bundleItems: [],
+  };
+}
+
+function parseProductDetail(raw: unknown): ShopProductDetail | null {
+  const product = parseProduct(raw);
+  if (!product || !isRecord(raw)) return null;
+  return {
+    ...product,
+    description: asText(raw.description, MAX_DESCRIPTION_LENGTH),
+    images: parseImages(raw.images, product.coverImage),
+    details: parseList(raw.details, parseDetailRow),
+    variants: parseList(raw.variants, parseVariant),
+    bundleItems: parseList(raw.bundle_items, parseBundleItem),
+  };
+}
+
 /**
- * Looks a product up by slug. The upstream API exposes no per-product
- * endpoint, so detail pages are served from the shop-home feed: only
- * products listed there can resolve.
+ * Fetches one product's full record (description, gallery, variants, bundle
+ * contents) from the product-detail endpoint, which is keyed by numeric id
+ * only. Returns null on any failure so callers can fall back to feed data.
+ */
+export async function getShopProductDetail(id: number): Promise<ShopProductDetail | null> {
+  if (!Number.isInteger(id) || id <= 0) return null;
+  try {
+    const res = await fetch(
+      `${SHOP_API_BASE_URL}/api/public/product-detail?id=${encodeURIComponent(id)}`,
+      {
+        headers: { Accept: "application/json" },
+        next: { revalidate: REVALIDATE_SECONDS },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      }
+    );
+    if (!res.ok) {
+      console.error(`product-detail API responded ${res.status} for id ${id}`);
+      return null;
+    }
+
+    const payload: unknown = await res.json();
+    // The API reports "not found" as ErrorCode 1 with a 200, not as a 404.
+    if (!isRecord(payload) || payload.ErrorCode !== 0 || !isRecord(payload.Data)) {
+      console.error(`product-detail API returned no product for id ${id}`);
+      return null;
+    }
+    return parseProductDetail(payload.Data);
+  } catch (error) {
+    console.error(`product-detail API request failed for id ${id}`, error);
+    return null;
+  }
+}
+
+/**
+ * Looks a product up by slug. The detail endpoint only takes an id, so the
+ * slug is first resolved through the shop-home feed: only products listed
+ * there can resolve. The feed's card data is the fallback if the detail
+ * call fails, so the page still renders with the cover image.
  */
 export async function getShopProduct(
   slug: string
-): Promise<{ product: ShopProduct; related: ShopProduct[] } | null> {
+): Promise<{ product: ShopProductDetail; related: ShopProduct[] } | null> {
   const safeSlug = asSlug(slug);
   if (!safeSlug) return null;
 
@@ -183,10 +321,13 @@ export async function getShopProduct(
   if (!shop) return null;
 
   const products = collectProducts(shop);
-  const product = products.find(
+  const listed = products.find(
     (item) => item.slug.toLowerCase() === safeSlug.toLowerCase()
   );
-  if (!product) return null;
+  if (!listed) return null;
+
+  const detail = await getShopProductDetail(listed.id);
+  const product = detail ?? withEmptyDetail(listed);
 
   const related = products
     .filter(

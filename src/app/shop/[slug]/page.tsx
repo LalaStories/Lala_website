@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ProductCard from "@/components/shop/ProductCard";
+import ProductGallery from "@/components/shop/ProductGallery";
 import AddToCart from "@/components/shop/AddToCart";
 import CartLink from "@/components/shop/CartLink";
 import { collectProducts, getShopHome, getShopProduct } from "@/lib/shop-api";
@@ -29,12 +30,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!found) return { title: "Product not found — LALA Stories" };
 
   const { product } = found;
+  const summary = product.description.replace(/\s+/g, " ").trim().slice(0, 155);
   return {
     title: `${product.title} — LALA Stories Shop`,
-    description: `${product.title} — ₹${product.price}${
-      product.mrp ? ` (was ₹${product.mrp})` : ""
-    }. ${product.type?.name ?? "Product"} from the LALA Stories shop.`,
-    openGraph: product.coverImage ? { images: [product.coverImage] } : undefined,
+    description:
+      summary ||
+      `${product.title} — ₹${product.price}${
+        product.mrp ? ` (was ₹${product.mrp})` : ""
+      }. ${product.type?.name ?? "Product"} from the LALA Stories shop.`,
+    openGraph: product.images.length > 0 ? { images: product.images } : undefined,
   };
 }
 
@@ -59,7 +63,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.title,
-    image: product.coverImage ?? undefined,
+    description: product.description || undefined,
+    image: product.images.length > 0 ? product.images : undefined,
     category: product.type?.name ?? undefined,
     offers: {
       "@type": "Offer",
@@ -89,24 +94,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Image */}
-            <div className="relative rounded-3xl overflow-hidden border border-card-border bg-slate-100 aspect-square">
-              {product.coverImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={product.coverImage}
-                  alt={product.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-7xl">🧸</div>
-              )}
-              {product.discountPercent > 0 && (
-                <span className="absolute top-5 right-5 text-xs font-extrabold uppercase px-4 py-1.5 rounded-full shadow-md tracking-wider bg-rose-500 text-white">
-                  {product.discountPercent}% OFF
-                </span>
-              )}
-            </div>
+            {/* Gallery */}
+            <ProductGallery
+              images={product.images}
+              title={product.title}
+              discountPercent={product.discountPercent}
+            />
 
             {/* Info */}
             <div className="space-y-6">
@@ -190,11 +183,74 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 </div>
               )}
 
-              {/* Bundle / variant notes */}
-              {(product.isBundle || product.hasVariants) && (
+              {/* Variants */}
+              {product.variants.length > 0 && (
+                <div className="bg-card-bg border border-card-border rounded-3xl p-6 space-y-3">
+                  <h2 className="font-heading font-extrabold text-lg">🎨 Available options</h2>
+                  <ul className="flex flex-wrap gap-2">
+                    {product.variants.map((variant, index) => (
+                      <li
+                        key={variant.id ?? `${variant.name}-${index}`}
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold ${
+                          variant.inStock === false
+                            ? "border-card-border text-text-muted line-through"
+                            : "border-orange-500/30 bg-orange-500/5"
+                        }`}
+                      >
+                        {variant.name}
+                        {variant.price !== null && (
+                          <span className="text-[#FF7A2F]">₹{variant.price}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-xs text-text-muted">
+                    Our team will confirm your choice when you order.
+                  </p>
+                </div>
+              )}
+
+              {/* Bundle contents */}
+              {product.bundleItems.length > 0 && (
+                <div className="bg-card-bg border border-card-border rounded-3xl p-6 space-y-3">
+                  <h2 className="font-heading font-extrabold text-lg">🎁 What&apos;s in the box</h2>
+                  <ul className="space-y-2">
+                    {product.bundleItems.map((item, index) => (
+                      <li
+                        key={item.id ?? `${item.title}-${index}`}
+                        className="flex items-center gap-3 text-sm"
+                      >
+                        {item.coverImage ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={item.coverImage}
+                            alt=""
+                            loading="lazy"
+                            className="w-10 h-10 rounded-xl object-cover border border-card-border bg-slate-100"
+                          />
+                        ) : (
+                          <span className="w-10 h-10 rounded-xl border border-card-border bg-slate-100 flex items-center justify-center">
+                            📦
+                          </span>
+                        )}
+                        <span className="font-bold">{item.title}</span>
+                        {item.qty > 1 && (
+                          <span className="text-text-muted">× {item.qty}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Fallback notes when the feed flags these but lists nothing */}
+              {((product.isBundle && product.bundleItems.length === 0) ||
+                (product.hasVariants && product.variants.length === 0)) && (
                 <ul className="text-sm text-text-muted space-y-1.5">
-                  {product.isBundle && <li>🎁 This is a bundle of multiple items.</li>}
-                  {product.hasVariants && (
+                  {product.isBundle && product.bundleItems.length === 0 && (
+                    <li>🎁 This is a bundle of multiple items.</li>
+                  )}
+                  {product.hasVariants && product.variants.length === 0 && (
                     <li>🎨 Available in multiple options — our team will confirm your choice.</li>
                   )}
                 </ul>
@@ -203,6 +259,45 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <AddToCart product={product} />
             </div>
           </div>
+
+          {/* Description & details */}
+          {(product.description || product.details.length > 0) && (
+            <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {product.description && (
+                <div className="lg:col-span-2 bg-card-bg border border-card-border rounded-3xl p-8 space-y-4">
+                  <h2 className="font-heading text-2xl font-extrabold tracking-tight">
+                    About this product
+                  </h2>
+                  <div className="space-y-3 text-sm md:text-base text-text-muted leading-relaxed">
+                    {product.description
+                      .split(/\r?\n+/)
+                      .map((line) => line.trim())
+                      .filter(Boolean)
+                      .map((line, index) => (
+                        <p key={index}>{line}</p>
+                      ))}
+                  </div>
+                </div>
+              )}
+              {product.details.length > 0 && (
+                <div className="bg-card-bg border border-card-border rounded-3xl p-8 space-y-4">
+                  <h2 className="font-heading text-xl font-extrabold tracking-tight">Details</h2>
+                  <dl className="space-y-3 text-sm">
+                    {product.details.map((row, index) => (
+                      <div key={index} className="border-b border-card-border/50 pb-3 last:border-0 last:pb-0">
+                        {row.label && (
+                          <dt className="text-xs font-bold uppercase tracking-wider text-text-muted">
+                            {row.label}
+                          </dt>
+                        )}
+                        <dd className="text-text-dark font-medium">{row.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Related */}
           {related.length > 0 && (
