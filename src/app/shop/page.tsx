@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { getShopHome } from "@/lib/shop-api";
@@ -34,8 +35,14 @@ export default async function ShopPage() {
               Explore our storybooks, plush toys, and combo packs — some even
               bundle a LALA Stories app subscription for extra bedtime magic.
             </p>
-            <div className="flex justify-center pt-2">
+            <div className="flex flex-wrap justify-center gap-3 pt-2">
               <CartLink />
+              <Link
+                href="/redeem"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#FF7A2F] hover:bg-[#E55A10] text-white text-sm font-extrabold shadow-md hover:shadow-lg transition-all"
+              >
+                🎟️ Redeem coupon
+              </Link>
             </div>
           </div>
 
