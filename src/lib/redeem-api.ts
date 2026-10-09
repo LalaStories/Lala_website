@@ -126,7 +126,28 @@ async function callRedeem(
   const code = num(payload.ErrorCode);
   const message = text(payload.Message, MAX_MESSAGE_LENGTH);
 
-  if (code === 0) return { ok: true, data: payload.Data };
+  if (code === 0) {
+    // One line per successful hop so a "no OTP arrived" report can be traced
+    // on the live box: `docker compose logs web | grep redeem/`. Field names
+    // and statuses only — never the mobile number, OTP, token or receipt.
+    const data = payload.Data;
+    const summary: Record<string, unknown> = {
+      dataKeys: isRecord(data) ? Object.keys(data) : typeof data,
+    };
+    if (isRecord(data)) {
+      if ("status" in data) summary.status = text(data.status, 32);
+      if ("otp_expires_in" in data) summary.otpExpiresIn = num(data.otp_expires_in);
+      if ("amount" in data) summary.amount = num(data.amount);
+      if (Array.isArray(data.plans)) summary.plans = data.plans.length;
+      if ("token" in data) summary.token = isRedeemToken(data.token) ? "ok" : "unusable";
+    }
+    if (route === "send-otp" && typeof body.mobile === "string") {
+      summary.countryCode = body.country_code;
+      summary.mobileEndsWith = body.mobile.slice(-2);
+    }
+    console.info(`redeem/${route} ok`, JSON.stringify(summary));
+    return { ok: true, data };
+  }
   if (code === 4) {
     console.error(
       `redeem/${route}: shop key ${key ? "rejected" : "required but SHOP_API_KEY is not set"} (ErrorCode 4)`
