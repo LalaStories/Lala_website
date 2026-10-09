@@ -105,8 +105,11 @@ function formatRupees(amount: number): string {
   return `₹${Number.isInteger(amount) ? amount : amount.toFixed(2)}`;
 }
 
-const inputClass =
-  "w-full rounded-2xl border border-card-border bg-secondary text-text-dark px-4 py-3 text-base focus:border-[#FF7A2F] focus:outline-hidden transition-all placeholder-text-muted/60 disabled:opacity-60";
+// Width is applied per field: a `w-full` baked into the shared class would
+// beat any narrower width set beside it and squeeze its row-mates.
+const fieldClass =
+  "rounded-2xl border border-card-border bg-secondary text-text-dark px-4 py-3 text-base focus:border-[#FF7A2F] focus:outline-hidden transition-all placeholder-text-muted/60 disabled:opacity-60";
+const inputClass = `${fieldClass} w-full`;
 const primaryButton =
   "inline-flex items-center justify-center gap-1.5 px-8 py-3.5 rounded-full bg-[#FF7A2F] hover:bg-[#E55A10] text-white text-sm font-extrabold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed";
 const secondaryButton =
@@ -156,7 +159,12 @@ function Progress({ step }: { step: Step }) {
           >
             {index < current ? "✓" : index + 1}
           </span>
-          <span className={`truncate ${index === current ? "text-text-dark" : "text-text-muted"}`}>
+          {/* Phones only have room for the current step's name. */}
+          <span
+            className={`truncate ${
+              index === current ? "text-text-dark" : "hidden sm:inline text-text-muted"
+            }`}
+          >
             {label}
           </span>
         </li>
@@ -485,7 +493,7 @@ function DetailsStep({
             aria-label="Country code"
             maxLength={5}
             disabled={pending}
-            className={`${inputClass} w-24 shrink-0 text-center`}
+            className={`${fieldClass} w-20 shrink-0 text-center`}
           />
           <input
             id="mobile"
@@ -498,7 +506,7 @@ function DetailsStep({
             placeholder={isIndia ? "10-digit mobile number" : "Mobile number"}
             required
             disabled={pending}
-            className={inputClass}
+            className={`${fieldClass} min-w-0 flex-1`}
           />
         </div>
         <p className="text-[11px] text-text-muted">
