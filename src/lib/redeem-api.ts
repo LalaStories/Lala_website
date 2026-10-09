@@ -9,6 +9,7 @@ import type {
   RedeemRazorpayOrder,
   RedeemVerifyOutcome,
 } from "@/types/redeem";
+import { SHOP_API_BASE_URL } from "@/lib/shop-origin";
 
 /**
  * Server-side client for /api/public/redeem/*.
@@ -19,9 +20,6 @@ import type {
  * relays, validates shapes, and maps errors to messages.
  */
 
-const SHOP_API_BASE_URL =
-  process.env.SHOP_API_BASE_URL?.replace(/\/+$/, "") ||
-  "https://cpanel.lalastories.com";
 
 const REDEEM_TIMEOUT_MS = 20_000;
 const MAX_MESSAGE_LENGTH = 300;

@@ -8,12 +8,10 @@ import type {
   ShopProductVariant,
   ShopSubscriptionInfo,
 } from "@/types/shop";
+import { SHOP_API_BASE_URL } from "@/lib/shop-origin";
 
 // Server-side only: keeps the upstream origin out of the client bundle and
 // avoids CORS. Overridable per environment without a code change.
-const SHOP_API_BASE_URL =
-  process.env.SHOP_API_BASE_URL?.replace(/\/+$/, "") ||
-  "https://cpanel.lalastories.com";
 
 const FETCH_TIMEOUT_MS = 10_000;
 const REVALIDATE_SECONDS = 300;

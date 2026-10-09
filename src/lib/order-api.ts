@@ -6,11 +6,9 @@ import type {
 } from "@/types/order";
 import type { ShopProduct } from "@/types/shop";
 import { collectProducts, getShopHome } from "@/lib/shop-api";
+import { SHOP_API_BASE_URL } from "@/lib/shop-origin";
 
 // Server-side only. Same origin as the catalog feed.
-const SHOP_API_BASE_URL =
-  process.env.SHOP_API_BASE_URL?.replace(/\/+$/, "") ||
-  "https://cpanel.lalastories.com";
 
 const PLACE_ORDER_TIMEOUT_MS = 20_000;
 
