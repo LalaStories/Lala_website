@@ -17,6 +17,8 @@ services:
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-}
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-}
+      - SHOP_API_BASE_URL=${SHOP_API_BASE_URL:-}
+      - SHOP_API_KEY=${SHOP_API_KEY:-}
       - NODE_ENV=production
     volumes:
       # Persist uploaded videos and images across deploys & restarts
