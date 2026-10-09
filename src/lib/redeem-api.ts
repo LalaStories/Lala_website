@@ -38,6 +38,13 @@ export function isRedeemToken(value: unknown): value is string {
   return typeof value === "string" && TOKEN_PATTERN.test(value);
 }
 
+/**
+ * The document says the redeem routes take "the same key and rules as the
+ * shop endpoints". The shop endpoints currently work without one, so the
+ * header is sent only when SHOP_API_KEY is configured; if the backend
+ * starts requiring it, the ErrorCode 4 branch below makes that visible in
+ * the logs without blaming the visitor.
+ */
 function shopKey(): string | null {
   const key = process.env.SHOP_API_KEY?.trim();
   return key ? key : null;
@@ -78,10 +85,6 @@ async function callRedeem(
   clientIp: string
 ): Promise<RedeemActionResult<unknown>> {
   const key = shopKey();
-  if (!key) {
-    console.error("redeem: SHOP_API_KEY is not configured");
-    return fail(GENERIC_ERROR, true);
-  }
 
   let res: Response;
   try {
@@ -90,7 +93,7 @@ async function callRedeem(
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        "X-Shop-Key": key,
+        ...(key ? { "X-Shop-Key": key } : {}),
         // The upstream throttles per visitor; without this every visitor
         // would share this server's address.
         "X-Forwarded-For": clientIp,
@@ -127,7 +130,9 @@ async function callRedeem(
 
   if (code === 0) return { ok: true, data: payload.Data };
   if (code === 4) {
-    console.error(`redeem/${route}: shop key rejected (ErrorCode 4)`);
+    console.error(
+      `redeem/${route}: shop key ${key ? "rejected" : "required but SHOP_API_KEY is not set"} (ErrorCode 4)`
+    );
     return fail(GENERIC_ERROR, true);
   }
   // ErrorCode 1 and anything else undocumented: the message is for the
