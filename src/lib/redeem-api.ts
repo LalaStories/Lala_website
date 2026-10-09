@@ -155,8 +155,11 @@ async function callRedeem(
     return fail(GENERIC_ERROR, true);
   }
   // ErrorCode 1 and anything else undocumented: the message is for the
-  // visitor, and the request itself is not worth repeating unchanged.
-  if (code !== 1) console.error(`redeem/${route} returned ErrorCode ${code}`);
+  // visitor, and the request itself is not worth repeating unchanged. The
+  // message is logged too so a refusal can be traced without the visitor
+  // having to repeat it back to us.
+  if (code === 1) console.warn(`redeem/${route} refused: ${message}`);
+  else console.error(`redeem/${route} returned ErrorCode ${code}: ${message}`);
   return fail(message || "This request was refused. Please check and try again.", false);
 }
 
