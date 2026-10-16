@@ -10,6 +10,9 @@ export default function CartLink() {
   return (
     <Link
       href="/shop/cart"
+      data-track="cta_click"
+      data-track-cta-type="basket"
+      data-track-cta-label="Basket"
       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-card-bg border border-card-border hover:border-orange-500/30 text-sm font-extrabold transition-all"
     >
       🛒 Basket

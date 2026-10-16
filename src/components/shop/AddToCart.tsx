@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/store/CartStore";
+import { CURRENCY, shopItem, trackEvent } from "@/lib/analytics";
 import type { ShopProduct } from "@/types/shop";
 
 const MAX_QTY = 99;
@@ -36,6 +37,9 @@ export default function AddToCart({ product }: { product: ShopProduct }) {
         <div className="flex flex-wrap gap-3 pt-1">
           <Link
             href="/help"
+            data-track="cta_click"
+            data-track-cta-type="enquire"
+            data-track-cta-label="Enquire to order"
             className="inline-flex items-center gap-1.5 px-6 py-3 rounded-full bg-[#FF7A2F] hover:bg-[#E55A10] text-white text-sm font-extrabold shadow-md hover:shadow-lg transition-all"
           >
             Enquire to order →
@@ -91,6 +95,11 @@ export default function AddToCart({ product }: { product: ShopProduct }) {
           onClick={() => {
             addItem(product.id, qty);
             setAdded(true);
+            trackEvent("add_to_cart", {
+              currency: CURRENCY,
+              value: product.price * qty,
+              items: [shopItem(product, qty)],
+            });
           }}
           className="inline-flex items-center gap-1.5 px-6 py-3 rounded-full bg-[#FF7A2F] hover:bg-[#E55A10] text-white text-sm font-extrabold shadow-md hover:shadow-lg transition-all"
         >
@@ -99,6 +108,9 @@ export default function AddToCart({ product }: { product: ShopProduct }) {
         {added && (
           <Link
             href="/shop/cart"
+            data-track="cta_click"
+            data-track-cta-type="basket"
+            data-track-cta-label="Go to basket"
             className="inline-flex items-center gap-1.5 px-6 py-3 rounded-full bg-secondary border border-card-border hover:border-orange-500/30 text-sm font-extrabold transition-all"
           >
             Go to basket →

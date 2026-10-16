@@ -39,6 +39,9 @@ export default async function ShopPage() {
               <CartLink />
               <Link
                 href="/redeem"
+                data-track="cta_click"
+                data-track-cta-type="redeem"
+                data-track-cta-label="Redeem coupon"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#FF7A2F] hover:bg-[#E55A10] text-white text-sm font-extrabold shadow-md hover:shadow-lg transition-all"
               >
                 🎟️ Redeem coupon

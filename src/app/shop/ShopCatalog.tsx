@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { ShopProduct, ShopProductType } from "@/types/shop";
 import ProductCard from "@/components/shop/ProductCard";
+import { trackEvent } from "@/lib/analytics";
 
 interface ShopCatalogProps {
   types: ShopProductType[];
@@ -34,13 +35,30 @@ export default function ShopCatalog({ types, onOffer, latest }: ShopCatalogProps
   const showOfferSection =
     onOffer.length > 0 && activeTypeId === null && searchQuery.trim() === "";
 
+  // Report a search once typing pauses, not on every keystroke.
+  const trimmedQuery = searchQuery.trim();
+  useEffect(() => {
+    if (!trimmedQuery) return;
+    const timer = window.setTimeout(() => {
+      trackEvent("search", { search_term: trimmedQuery.toLowerCase(), results: filteredProducts.length });
+    }, 800);
+    return () => window.clearTimeout(timer);
+    // Only the query should re-arm the timer; the count is read when it fires.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trimmedQuery]);
+
+  function chooseType(type: ShopProductType | null) {
+    setActiveTypeId(type?.id ?? null);
+    trackEvent("filter_products", { filter_type: type?.name ?? "All" });
+  }
+
   return (
     <div className="space-y-12">
       {/* Search & Type Filter */}
       <div className="flex flex-col md:flex-row gap-6 justify-between items-center bg-card-bg border border-card-border p-6 rounded-3xl shadow-xs">
         <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-none">
           <button
-            onClick={() => setActiveTypeId(null)}
+            onClick={() => chooseType(null)}
             className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all cursor-pointer select-none whitespace-nowrap border ${
               activeTypeId === null
                 ? "bg-[#FF7A2F] border-[#FF7A2F] text-white shadow-md scale-102"
@@ -52,7 +70,7 @@ export default function ShopCatalog({ types, onOffer, latest }: ShopCatalogProps
           {types.map((type) => (
             <button
               key={type.id}
-              onClick={() => setActiveTypeId(type.id)}
+              onClick={() => chooseType(type)}
               className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all cursor-pointer select-none whitespace-nowrap border ${
                 activeTypeId === type.id
                   ? "bg-[#FF7A2F] border-[#FF7A2F] text-white shadow-md scale-102"
@@ -87,7 +105,7 @@ export default function ShopCatalog({ types, onOffer, latest }: ShopCatalogProps
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {onOffer.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} listName="On Offer" />
             ))}
           </div>
         </section>
@@ -101,7 +119,7 @@ export default function ShopCatalog({ types, onOffer, latest }: ShopCatalogProps
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} listName="All Products" />
             ))}
           </div>
         ) : (

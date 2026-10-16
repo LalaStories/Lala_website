@@ -2,6 +2,7 @@
 
 import React, { useState, useTransition } from "react";
 import { submitProgramRegistrationAction } from "@/app/admin/actions";
+import { trackEvent } from "@/lib/analytics";
 
 interface FormField {
   id: string;
@@ -58,6 +59,7 @@ export default function ProgramCard({ program }: ProgramCardProps) {
     startTransition(async () => {
       try {
         await submitProgramRegistrationAction(program.id, labelResponses);
+        trackEvent("generate_lead", { form_name: "program_registration", program: program.title });
         setSubmitted(true);
         if (program.qrImageUrl) {
           setShowQr(true);

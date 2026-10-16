@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import StarBackground from "@/components/common/StarBackground";
 import Button from "@/components/ui/Button";
+import { trackEvent } from "@/lib/analytics";
 
 interface FAQItem {
   id: string;
@@ -54,6 +55,7 @@ export default function HelpContent({ faqs }: { faqs: FAQItem[] }) {
       const data = await response.json();
 
       if (data.success) {
+        trackEvent("generate_lead", { form_name: "help_contact" });
         setIsSubmitted(true);
         setFormState({ name: "", email: "", subject: "", message: "" });
       } else {

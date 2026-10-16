@@ -8,6 +8,8 @@ import ProductCard from "@/components/shop/ProductCard";
 import ProductGallery from "@/components/shop/ProductGallery";
 import AddToCart from "@/components/shop/AddToCart";
 import CartLink from "@/components/shop/CartLink";
+import TrackOnMount from "@/components/analytics/TrackOnMount";
+import { shopItem } from "@/lib/analytics";
 import { collectProducts, getShopHome, getShopProduct } from "@/lib/shop-api";
 
 export const revalidate = 300;
@@ -79,6 +81,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
   return (
     <div className="flex flex-col min-h-screen font-body bg-secondary text-text-dark">
       <Header />
+      <TrackOnMount
+        key={product.slug}
+        event="view_item"
+        params={{ currency: "INR", value: product.price, items: [shopItem(product)] }}
+      />
       <main className="grow pt-32 pb-20">
         <script
           type="application/ld+json"
@@ -307,7 +314,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {related.map((item) => (
-                  <ProductCard key={item.id} product={item} />
+                  <ProductCard key={item.id} product={item} listName="You may also like" />
                 ))}
               </div>
             </section>

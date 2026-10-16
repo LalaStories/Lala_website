@@ -8,6 +8,7 @@ import {
   verifyRedeemPaymentAction,
 } from "./actions";
 import { isRazorpayResult, loadRazorpay } from "@/lib/razorpay-client";
+import { CURRENCY, trackEvent } from "@/lib/analytics";
 import type {
   RedeemCoupon,
   RedeemGrant,
@@ -99,6 +100,17 @@ function formatDate(value: string): string {
     month: "long",
     year: "numeric",
   });
+}
+
+/** GA4 item for a subscription plan bought through the redeem flow. */
+function subscriptionItem(plan: string, amount: number) {
+  return {
+    item_id: `plan:${plan}`,
+    item_name: plan,
+    item_category: "App subscription",
+    price: amount,
+    quantity: 1,
+  };
 }
 
 function formatRupees(amount: number): string {
@@ -205,7 +217,11 @@ export default function RedeemFlow() {
           onSubmit={(coupon) =>
             startTransition(async () => {
               const result = await checkCouponAction({ coupon });
-              if (!result.ok) return setError(result.message);
+              if (!result.ok) {
+                trackEvent("redeem_coupon_rejected");
+                return setError(result.message);
+              }
+              trackEvent("redeem_start", { plan_count: result.data.plans.length });
               setStep({
                 kind: "details",
                 coupon: result.data,
@@ -234,6 +250,11 @@ export default function RedeemFlow() {
                 countryCode,
               });
               if (!result.ok) return setError(result.message);
+              trackEvent("redeem_otp_sent", {
+                plan: plan.title,
+                value: plan.payable,
+                currency: CURRENCY,
+              });
               const now = Date.now();
               setStep({
                 kind: "otp",
@@ -285,12 +306,25 @@ export default function RedeemFlow() {
               if (!result.ok) return setError(result.message);
               const mobileLabel = formatMobile(step.countryCode, step.mobile);
               const outcome = result.data;
+              trackEvent("redeem_otp_verified", { plan: step.plan.title });
               if (outcome.status === "granted") {
+                // Coupon covered the whole plan: activated with nothing to pay.
+                trackEvent("redeem_complete", {
+                  plan: step.plan.title,
+                  value: 0,
+                  currency: CURRENCY,
+                  paid: false,
+                });
                 setStep({
                   kind: "done",
                   grant: { ...outcome.grant, mobile: outcome.grant.mobile || mobileLabel },
                 });
               } else if (outcome.status === "payment_required") {
+                trackEvent("begin_checkout", {
+                  currency: CURRENCY,
+                  value: outcome.amount,
+                  items: [subscriptionItem(outcome.plan || step.plan.title, outcome.amount)],
+                });
                 setStep({
                   kind: "payment",
                   token: outcome.token,
@@ -310,9 +344,23 @@ export default function RedeemFlow() {
       {step.kind === "payment" && (
         <PaymentStep
           step={step}
-          onGranted={(grant) =>
-            setStep({ kind: "done", grant: { ...grant, mobile: grant.mobile || step.mobileLabel } })
-          }
+          onGranted={(grant) => {
+            // Server-confirmed payment for a subscription: the real purchase.
+            trackEvent("purchase", {
+              transaction_id: step.razorpay.orderId,
+              value: step.amount,
+              currency: step.razorpay.currency || CURRENCY,
+              payment_type: "razorpay",
+              items: [subscriptionItem(step.plan, step.amount)],
+            });
+            trackEvent("redeem_complete", {
+              plan: step.plan,
+              value: step.amount,
+              currency: CURRENCY,
+              paid: true,
+            });
+            setStep({ kind: "done", grant: { ...grant, mobile: grant.mobile || step.mobileLabel } });
+          }}
           onProcessing={(message) =>
             setStep({ kind: "processing", message, mobileLabel: step.mobileLabel })
           }

@@ -3,6 +3,7 @@
 import React from "react";
 import { Cta, ctaHref, ctaOpensNewTab } from "@/types/landing";
 import { trackPixel } from "@/components/analytics/MetaPixel";
+import { trackEvent } from "@/lib/analytics";
 import { cn } from "@/utils/helpers";
 
 /** Anchor the lead form carries, so "form" CTAs have somewhere to scroll. */
@@ -36,6 +37,9 @@ export default function CtaButton({ cta, variant = "primary", size = "lg", class
   );
 
   const handleClick = (e: React.MouseEvent) => {
+    // GA4/Clarity get one generic event; call/WhatsApp/app-store anchors are
+    // also classified by the site-wide ClickTracker, so nothing is repeated here.
+    trackEvent("cta_click", { cta_type: cta.type, cta_label: label });
     switch (cta.type) {
       case "form": {
         e.preventDefault();

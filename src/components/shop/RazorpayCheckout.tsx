@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { verifyPaymentAction } from "@/app/shop/actions";
 import { loadRazorpay } from "@/lib/razorpay-client";
+import { trackEvent, type AnalyticsItem } from "@/lib/analytics";
 import type { PlacedOrder, RazorpayResult } from "@/types/order";
 
 type PayState =
@@ -18,12 +19,15 @@ interface RazorpayCheckoutProps {
   keyId: string;
   order: PlacedOrder;
   customer: { name: string; phone: string; email: string };
+  /** What was bought, for the analytics purchase event. */
+  items?: AnalyticsItem[];
 }
 
 export default function RazorpayCheckout({
   keyId,
   order,
   customer,
+  items = [],
 }: RazorpayCheckoutProps) {
   const [payState, setPayState] = useState<PayState>({ kind: "opening" });
   // Guards against a double "handler" call verifying the same payment twice.
@@ -41,13 +45,24 @@ export default function RazorpayCheckout({
       });
       verifyingRef.current = false;
 
+      if (result.ok) {
+        // The server confirmed the payment: this is the real purchase.
+        trackEvent("purchase", {
+          transaction_id: order.reference ?? response.razorpay_order_id,
+          value: order.amount !== null ? order.amount / 100 : undefined,
+          currency: order.currency ?? "INR",
+          payment_type: "razorpay",
+          items,
+        });
+      }
+
       setPayState(
         result.ok
           ? { kind: "paid", message: result.message }
           : { kind: "unconfirmed", message: result.message }
       );
     },
-    [order.orderId]
+    [order.orderId, order.reference, order.amount, order.currency, items]
   );
 
   const pay = useCallback(async () => {

@@ -4,6 +4,13 @@ import React, { useActionState, useEffect, useMemo, useRef, useState } from "rea
 import Link from "next/link";
 import { useCart } from "@/store/CartStore";
 import { placeOrderAction } from "@/app/shop/actions";
+import {
+  CURRENCY,
+  itemsValue,
+  shopItem,
+  trackEvent,
+  type AnalyticsItem,
+} from "@/lib/analytics";
 import { EMPTY_ORDER_STATE } from "@/types/order";
 import type { OrderFieldErrors } from "@/types/order";
 import type { ShopProduct } from "@/types/shop";
@@ -87,6 +94,11 @@ export default function CheckoutForm({ products }: CheckoutFormProps) {
   const [address, setAddress] = useState<AddressFields>(EMPTY_ADDRESS);
   const [pincodeStatus, setPincodeStatus] = useState<PincodeStatus>({ kind: "idle" });
   const lookupRef = useRef<AbortController | null>(null);
+  // Snapshot of the basket at "Place order", so the purchase event can still
+  // list the items after the basket has been cleared.
+  const [submittedItems, setSubmittedItems] = useState<AnalyticsItem[]>([]);
+  const viewedCartRef = useRef(false);
+  const reportedStatusRef = useRef<string | null>(null);
 
   const setField = (key: keyof AddressFields) => (value: string) =>
     setAddress((prev) => ({ ...prev, [key]: value }));
@@ -160,10 +172,41 @@ export default function CheckoutForm({ products }: CheckoutFormProps) {
     (entry) => !entry.product || lineProblem(entry.product, entry.line.qty) !== null
   );
 
-  // The order is placed; the basket has served its purpose.
+  // One view_cart per visit, once the basket has been read from storage.
   useEffect(() => {
-    if (state.status === "success" || state.status === "awaiting_payment") clear();
-  }, [state.status, clear]);
+    if (!ready || viewedCartRef.current || basket.length === 0) return;
+    viewedCartRef.current = true;
+    const items = basket.flatMap(({ line, product }) =>
+      product ? [shopItem(product, line.qty)] : []
+    );
+    trackEvent("view_cart", { currency: CURRENCY, value: itemsValue(items), items });
+  }, [ready, basket]);
+
+  // The order is placed; the basket has served its purpose. Report the
+  // outcome once per status: a paid-later order is "payment info added"
+  // and becomes a purchase in RazorpayCheckout; a no-payment order is the
+  // purchase itself.
+  useEffect(() => {
+    if (state.status !== "success" && state.status !== "awaiting_payment") return;
+    if (reportedStatusRef.current !== state.status) {
+      reportedStatusRef.current = state.status;
+      const common = {
+        currency: state.order?.currency ?? CURRENCY,
+        value: itemsValue(submittedItems),
+        items: submittedItems,
+      };
+      if (state.status === "success") {
+        trackEvent("purchase", {
+          ...common,
+          transaction_id: state.order?.reference ?? undefined,
+          payment_type: "none",
+        });
+      } else {
+        trackEvent("add_payment_info", { ...common, payment_type: "razorpay" });
+      }
+    }
+    clear();
+  }, [state.status, state.order, submittedItems, clear]);
 
   if (state.status === "awaiting_payment" && state.order && state.razorpayKeyId) {
     return (
@@ -175,6 +218,7 @@ export default function CheckoutForm({ products }: CheckoutFormProps) {
           phone: address.phone.replace(/\D/g, ""),
           email: address.email,
         }}
+        items={submittedItems}
       />
     );
   }
@@ -230,7 +274,22 @@ export default function CheckoutForm({ products }: CheckoutFormProps) {
   }
 
   return (
-    <form action={formAction} className="space-y-8">
+    <form
+      action={formAction}
+      onSubmit={() => {
+        // Runs before the server action; the action itself is untouched.
+        const items = basket.flatMap(({ line, product }) =>
+          product ? [shopItem(product, line.qty)] : []
+        );
+        setSubmittedItems(items);
+        trackEvent("begin_checkout", {
+          currency: CURRENCY,
+          value: itemsValue(items),
+          items,
+        });
+      }}
+      className="space-y-8"
+    >
       {/* The server re-reads every product by id; this only says what and how many. */}
       <input
         type="hidden"

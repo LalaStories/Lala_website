@@ -1,12 +1,21 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import { shopItem, trackEvent } from "@/lib/analytics";
 import type { ShopProduct } from "@/types/shop";
 
+interface ProductCardProps {
+  product: ShopProduct;
+  /** Which list the card sits in, for the select_item event (e.g. "On Offer"). */
+  listName?: string;
+}
+
 /**
- * Presentational card with no hooks or handlers, so it renders from both the
- * client catalog and the server-rendered detail page.
+ * Product card. A client component only so a tap can be reported as a
+ * select_item; it still renders from the server-rendered detail page.
  */
-export default function ProductCard({ product }: { product: ShopProduct }) {
+export default function ProductCard({ product, listName }: ProductCardProps) {
   const body = (
     <>
       {/* Product Image */}
@@ -85,7 +94,16 @@ export default function ProductCard({ product }: { product: ShopProduct }) {
 
   // Products the feed gave no usable slug for have no detail page to link to.
   return product.slug ? (
-    <Link href={`/shop/${product.slug}`} className={shell}>
+    <Link
+      href={`/shop/${product.slug}`}
+      className={shell}
+      onClick={() =>
+        trackEvent("select_item", {
+          item_list_name: listName ?? "Shop",
+          items: [shopItem(product)],
+        })
+      }
+    >
       {body}
     </Link>
   ) : (

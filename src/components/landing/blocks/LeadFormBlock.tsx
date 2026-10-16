@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { LeadFormData } from "@/types/landing";
 import { submitLeadAction } from "@/app/admin/landing/actions";
 import { trackPixel } from "@/components/analytics/MetaPixel";
+import { trackEvent } from "@/lib/analytics";
 import { LEAD_FORM_ANCHOR } from "../CtaButton";
 
 interface LeadFormBlockProps {
@@ -58,6 +59,7 @@ export default function LeadFormBlock({ data, landingPageId, campaignName }: Lea
         });
 
         trackPixel("Lead", { content_name: campaignName, status: "submitted" });
+        trackEvent("generate_lead", { form_name: "landing_lead_form", campaign: campaignName });
         setDone(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");

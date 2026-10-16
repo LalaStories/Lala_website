@@ -3,7 +3,15 @@ import { Fredoka, Quicksand } from "next/font/google";
 import { AudioProvider } from "@/store/AudioContext";
 import { ThemeProvider } from "@/store/ThemeContext";
 import MetaPixel from "@/components/analytics/MetaPixel";
+import Clarity from "@/components/analytics/Clarity";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import ClickTracker from "@/components/analytics/ClickTracker";
 import { SITE_META_PIXEL_ID } from "@/lib/meta-pixel";
+import {
+  SITE_CLARITY_PROJECT_ID,
+  SITE_GA_MEASUREMENT_ID,
+  SITE_GOOGLE_ADS_ID,
+} from "@/lib/analytics-ids";
 import "./globals.css";
 
 const fredoka = Fredoka({
@@ -46,6 +54,14 @@ export default function RootLayout({
         </ThemeProvider>
         {/* Site-wide Meta Pixel. Landing pages may add a campaign pixel on top. */}
         <MetaPixel pixelId={SITE_META_PIXEL_ID} />
+        {/* Analytics only in production builds so local work doesn't show up as traffic. */}
+        {process.env.NODE_ENV === "production" && (
+          <>
+            <GoogleAnalytics measurementId={SITE_GA_MEASUREMENT_ID} adsId={SITE_GOOGLE_ADS_ID} />
+            <Clarity projectId={SITE_CLARITY_PROJECT_ID} />
+          </>
+        )}
+        <ClickTracker />
       </body>
     </html>
   );
